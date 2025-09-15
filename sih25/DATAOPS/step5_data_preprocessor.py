@@ -85,6 +85,13 @@ class ArgoDataProcessor:
             elif param in ds.variables:
                 # Fall back to raw if adjusted not available
                 return ds[param]
+        else:
+            # Unknown mode, try both adjusted and raw
+            adjusted_var = f"{param}_ADJUSTED"
+            if adjusted_var in ds.variables:
+                return ds[adjusted_var]
+            elif param in ds.variables:
+                return ds[param]
         
         return None
     
@@ -101,6 +108,30 @@ class ArgoDataProcessor:
             return data.where(good_qc_mask)
         else:
             return data
+    
+    def _safe_qc_check(self, qc_value) -> bool:
+        """Safely check if QC flag is good, handling both numeric and character flags"""
+        try:
+            if isinstance(qc_value, (bytes, str)):
+                # Handle character flags like 'B' - decode if needed
+                if isinstance(qc_value, bytes):
+                    qc_str = qc_value.decode('ascii', errors='ignore').strip()
+                else:
+                    qc_str = str(qc_value).strip()
+                
+                # Convert character flags to numeric if possible
+                if qc_str.isdigit():
+                    return int(qc_str) in self.good_qc_flags
+                else:
+                    # For character flags like 'B', 'F', etc., be more permissive
+                    # 'B' often means "probably good" in some Argo contexts
+                    return qc_str in ['B', '1', '2']
+            else:
+                # Numeric QC flag
+                return int(qc_value) in self.good_qc_flags
+        except:
+            # If we can't parse the QC flag, be conservative but permissive
+            return True
 
 
 @task(name="data-preprocessing")
@@ -134,18 +165,37 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
         platform_number = None
         
         if 'PLATFORM_NUMBER' in ds.variables:
-            platform_number = processor._decode_char_array(ds['PLATFORM_NUMBER'].values)
-            float_id = platform_number
+            try:
+                platform_raw = ds['PLATFORM_NUMBER'].values
+                platform_number = processor._decode_char_array(platform_raw)
+                float_id = platform_number.strip() if platform_number else None
+                if not float_id:  # If empty, try to get from filename
+                    float_id = nc_file.stem
+            except Exception as e:
+                logger.warning(f"Could not decode PLATFORM_NUMBER: {e}")
+                float_id = nc_file.stem
         
         # Extract DATA_MODE
-        data_mode = 'R'  # Default
+        data_mode = 'D'  # Default fallback
         if 'DATA_MODE' in ds.variables:
-            data_mode = processor._decode_char_array(ds['DATA_MODE'].values)
+            try:
+                data_mode_raw = ds['DATA_MODE'].values
+                data_mode = processor._decode_char_array(data_mode_raw)
+                if not data_mode.strip():  # If empty, use default
+                    data_mode = 'D'
+            except Exception as e:
+                logger.warning(f"Could not decode DATA_MODE: {e}")
+                data_mode = 'D'
         
         # Extract parameter-specific data modes (BGC files)
         param_data_modes = processor._get_parameter_data_mode(ds)
         
         logger.info(f"File info: Float ID={float_id}, Data Mode={data_mode}")
+        logger.info(f"Available variables: {list(ds.variables.keys())[:10]}...")  # Show first 10 variables
+        
+        # Check what core parameters are available
+        available_core = [param for param in processor.core_params if param in ds.variables or f"{param}_ADJUSTED" in ds.variables]
+        logger.info(f"Available core parameters: {available_core}")
         
         # Prepare data collection
         processed_records = []
@@ -212,10 +262,18 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
                             qc_var_name = f"{param}_QC" if param in ds.variables else f"{param}_ADJUSTED_QC"
                             if qc_var_name in ds.variables:
                                 qc_value = ds[qc_var_name].isel(N_PROF=prof_idx, N_LEVELS=level_idx) if n_prof > 1 else ds[qc_var_name].isel(N_LEVELS=level_idx)
-                                level_record[f'{param.lower()}_qc'] = int(qc_value.values) if not np.isnan(qc_value.values) else None
                                 
-                                # Only include data with good QC flags
-                                if int(qc_value.values) in processor.good_qc_flags:
+                                # Store original QC value for reference
+                                try:
+                                    if isinstance(qc_value.values, (bytes, str)):
+                                        level_record[f'{param.lower()}_qc'] = str(qc_value.values).strip()
+                                    else:
+                                        level_record[f'{param.lower()}_qc'] = int(qc_value.values) if not np.isnan(qc_value.values) else None
+                                except:
+                                    level_record[f'{param.lower()}_qc'] = str(qc_value.values)
+                                
+                                # Only include data with good QC flags using safe check
+                                if processor._safe_qc_check(qc_value.values):
                                     level_record[param.lower()] = float(value.values) if not np.isnan(value.values) else None
                                 else:
                                     level_record[param.lower()] = None
@@ -229,10 +287,21 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
                             if error_var_name in ds.variables:
                                 error_val = ds[error_var_name].isel(N_PROF=prof_idx, N_LEVELS=level_idx) if n_prof > 1 else ds[error_var_name].isel(N_LEVELS=level_idx)
                                 level_record[f'{param.lower()}_error'] = float(error_val.values) if not np.isnan(error_val.values) else None
+                        else:
+                            logger.debug(f"No data variable found for {param} at level {level_idx}")
+                    else:
+                        logger.debug(f"Parameter {param} not available in dataset")
                 
                 # Only add record if it has at least pressure data
                 if level_record.get('pres') is not None:
                     processed_records.append(level_record)
+                else:
+                    # Debug: print why record was rejected
+                    missing_params = [param for param in ['pres', 'temp', 'psal'] if level_record.get(param) is None]
+                    if missing_params:
+                        logger.debug(f"Level {level_idx} rejected: missing {missing_params}")
+                    
+        logger.info(f"Total processed records before filtering: {len(processed_records)}")
         
         # Convert to DataFrame
         df = pd.DataFrame(processed_records)

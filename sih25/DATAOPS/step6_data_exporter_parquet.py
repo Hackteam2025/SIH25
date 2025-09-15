@@ -240,7 +240,16 @@ def create_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
     # QC flag analysis
     qc_cols = [col for col in df.columns if col.endswith('_qc')]
     for qc_col in qc_cols:
-        qc_counts = df[qc_col].value_counts().to_dict()
+        def clean_qc_val(val):
+            if isinstance(val, str) and val.startswith("[b'") and val.endswith("']"):
+                try:
+                    return int(val[3:-2])
+                except (ValueError, TypeError):
+                    return val
+            return val
+
+        cleaned_series = df[qc_col].apply(clean_qc_val)
+        qc_counts = cleaned_series.value_counts().to_dict()
         report['qc_summary'][qc_col] = {int(k): int(v) for k, v in qc_counts.items() if pd.notna(k)}
     
     # Coordinate coverage

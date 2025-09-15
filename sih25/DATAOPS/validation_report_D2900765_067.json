@@ -1,0 +1,107 @@
+{
+  "file_name": "D2900765_067.nc",
+  "is_valid": true,
+  "total_records": 71,
+  "valid_records": 71,
+  "validation_errors": [],
+  "warnings": [
+    "Found 1 temperature values outside expected range",
+    "Found non-numeric QC flag 'B' in PROFILE_PRES_QC",
+    "Found non-numeric QC flag 'B' in PROFILE_TEMP_QC",
+    "Found non-numeric QC flag 'B' in PROFILE_PSAL_QC",
+    "Could not validate DATA_MODE: 'ascii' codec can't decode byte 0xd0 in position 0: ordinal not in range(128)"
+  ],
+  "summary": {
+    "total_variables": 64,
+    "required_variables_found": 4,
+    "qc_variables_validated": 8,
+    "data_mode_valid": true,
+    "coordinate_coverage": 1.0,
+    "qc_summary": {
+      "JULD_QC": {
+        "unique_flags": [
+          1
+        ],
+        "counts": [
+          1
+        ],
+        "total": 1
+      },
+      "POSITION_QC": {
+        "unique_flags": [
+          1
+        ],
+        "counts": [
+          1
+        ],
+        "total": 1
+      },
+      "PRES_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          66,
+          5
+        ],
+        "total": 71
+      },
+      "PRES_ADJUSTED_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          64,
+          7
+        ],
+        "total": 71
+      },
+      "TEMP_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          63,
+          8
+        ],
+        "total": 71
+      },
+      "TEMP_ADJUSTED_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          61,
+          10
+        ],
+        "total": 71
+      },
+      "PSAL_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          62,
+          9
+        ],
+        "total": 71
+      },
+      "PSAL_ADJUSTED_QC": {
+        "unique_flags": [
+          1,
+          4
+        ],
+        "counts": [
+          60,
+          11
+        ],
+        "total": 71
+      }
+    }
+  }
+}

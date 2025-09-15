@@ -1,0 +1,37 @@
+{
+  "file_prefix": "D2900765_067",
+  "export_timestamp": "2025-09-15T18:36:42.552041",
+  "input_records": 64,
+  "columns_exported": [
+    "file_name",
+    "float_id",
+    "profile_idx",
+    "data_mode",
+    "timestamp",
+    "latitude",
+    "longitude",
+    "cycle_number",
+    "level_idx",
+    "pres_qc",
+    "pres",
+    "pres_error",
+    "temp_qc",
+    "temp",
+    "temp_error",
+    "psal_qc",
+    "psal",
+    "psal_error",
+    "depth_m",
+    "n_levels",
+    "max_pressure",
+    "temp_range",
+    "sal_range"
+  ],
+  "files_created": {
+    "data_parquet": "preprocessed_data/D2900765_067_data.parquet",
+    "profiles_parquet": "preprocessed_data/D2900765_067_profiles.parquet",
+    "quality_report": "preprocessed_data/D2900765_067_quality_report.json"
+  },
+  "parquet_compression": "snappy",
+  "optimization_applied": true
+}

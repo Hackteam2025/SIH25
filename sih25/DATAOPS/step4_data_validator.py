@@ -158,18 +158,33 @@ def validate_argo_data(nc_file_path: str, schema_info: Dict[str, Any]) -> ArgoVa
         
         for qc_var in schema_info.get("qc_variables", []):
             if qc_var in ds.variables:
-                qc_values = ds[qc_var].values.flatten()
-                qc_values = qc_values[~np.isnan(qc_values.astype(float))]  # Remove NaN
+                qc_values_raw = ds[qc_var].values.flatten()
+
+                # Decode bytes to string and filter out non-digit characters
+                decoded_flags = []
+                for flag in qc_values_raw:
+                    # Handle bytes, strings, and potential fill values
+                    try:
+                        s_flag = flag.decode('utf-8').strip() if isinstance(flag, bytes) else str(flag).strip()
+                        if s_flag.isdigit():
+                            decoded_flags.append(int(s_flag))
+                        elif s_flag and s_flag not in ['\x00', 'nan']: # Log other non-digit flags
+                            warnings_list.append(f"Found non-numeric QC flag '{s_flag}' in {qc_var}")
+                    except (ValueError, AttributeError):
+                        pass # Ignore values that can't be processed (like actual NaNs)
                 
-                unique_flags, counts = np.unique(qc_values, return_counts=True)
+                if not decoded_flags:
+                    continue
+
+                unique_flags, counts = np.unique(decoded_flags, return_counts=True)
                 qc_summary[qc_var] = {
                     "unique_flags": [int(f) for f in unique_flags],
                     "counts": [int(c) for c in counts],
-                    "total": int(len(qc_values))
+                    "total": int(sum(counts))
                 }
                 
                 # Check for invalid QC flags
-                invalid_flags = [f for f in unique_flags if int(f) not in config.valid_qc_flags]
+                invalid_flags = [f for f in unique_flags if f not in config.valid_qc_flags]
                 if invalid_flags:
                     validation_errors.append({
                         "type": "invalid_qc_flag",
