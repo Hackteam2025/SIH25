@@ -4,3 +4,6 @@ we're building a voice ai conversational agent that has tools to visualize and g
 ## DOCS
 this folder contains different files, have a look if needed.
 
+## DataOps
+this contains all of the information required to perform E2E (end to end) 
+- it also contains a README which contains information on how to use.

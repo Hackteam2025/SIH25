@@ -1,0 +1,24 @@
+[project]
+name = "sih25"
+version = "0.1.0" 
+description = "SIH25 data ops pipeline"
+requires-python = ">=3.9"
+dependencies = [
+    "xarray>=2024.1.0",
+    "netcdf4>=1.6.0", 
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "pyarrow>=15.0.0",
+    "cftime>=1.6.0",
+    # Workflow orchestration
+    "prefect>=2.18.0",
+    # Data validation
+    "pydantic>=2.5.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.18.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
