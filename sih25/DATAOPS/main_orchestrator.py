@@ -17,26 +17,61 @@ from step4_data_validator import validate_argo_data
 from step5_data_preprocessor import preprocess_argo_data
 from step6_data_exporter_parquet import export_to_parquet
 
+# Import DATA LOADER
+try:
+    # Try different import paths depending on how the script is run
+    try:
+        from ..LOADER.data_loader import load_parquet_to_postgres
+    except ImportError:
+        # If running from DATAOPS directory, try absolute import
+        import sys
+        import os
+        from pathlib import Path
+
+        # Add the sih25 directory to Python path
+        sih25_dir = Path(__file__).parent.parent
+        if str(sih25_dir) not in sys.path:
+            sys.path.insert(0, str(sih25_dir))
+
+        try:
+            from LOADER.data_loader import load_parquet_to_postgres
+        except ImportError:
+            # Try absolute import from project root
+            project_root = Path(__file__).parent.parent.parent
+            if str(project_root) not in sys.path:
+                sys.path.insert(0, str(project_root))
+
+            from sih25.LOADER.data_loader import load_parquet_to_postgres
+    LOADER_AVAILABLE = True
+except ImportError as e:
+    LOADER_AVAILABLE = False
+    print(f"Warning: Could not import LOADER module: {e}")
+
 
 @flow(
     name="argo-data-pipeline",
-    description="Complete Argo NetCDF to Parquet processing pipeline",
+    description="Complete Argo NetCDF to Parquet processing pipeline with optional database loading",
     task_runner=ConcurrentTaskRunner(),
-    flow_run_name="argo-pipeline-{file_name}",
 )
 async def argo_data_pipeline(
     nc_file_path: str,
     output_dir: str = "output",
-    skip_validation_errors: bool = False
+    skip_validation_errors: bool = False,
+    load_to_database: bool = False,
+    create_db_tables: bool = True,
+    deduplication_strategy: str = "upsert"
 ) -> Dict[str, Any]:
     """
     Complete Argo data processing pipeline
-    
+
     Args:
         nc_file_path: Path to Argo NetCDF file
         output_dir: Output directory for processed files
         skip_validation_errors: Continue processing even with validation errors
-        
+        load_to_database: Whether to load data into PostgreSQL database
+        create_db_tables: Whether to create database tables if they don't exist
+        deduplication_strategy: "upsert" or "ignore" for handling database duplicates
+
     Returns:
         Dictionary with pipeline results and file paths
     """
@@ -57,7 +92,7 @@ async def argo_data_pipeline(
     try:
         # Step 3: Schema Exploration
         logger.info("Step 3: Starting schema exploration...")
-        schema_info = await explore_argo_schema(nc_file_path)
+        schema_info = explore_argo_schema(nc_file_path)
         pipeline_results["schema_info"] = schema_info
         pipeline_results["steps_completed"].append("schema_exploration")
         
@@ -65,7 +100,7 @@ async def argo_data_pipeline(
         
         # Step 4: Data Validation
         logger.info("Step 4: Starting data validation...")
-        validation_result = await validate_argo_data(nc_file_path, schema_info)
+        validation_result = validate_argo_data(nc_file_path, schema_info)
         pipeline_results["validation_result"] = validation_result.dict()
         pipeline_results["steps_completed"].append("validation")
         
@@ -85,7 +120,7 @@ async def argo_data_pipeline(
         # Step 5: Data Preprocessing
         logger.info("Step 5: Starting data preprocessing...")
         try:
-            processed_df = await preprocess_argo_data(nc_file_path, validation_result.dict())
+            processed_df = preprocess_argo_data(nc_file_path, validation_result.dict())
             
             if processed_df.empty:
                 error_msg = "No valid data found after preprocessing"
@@ -110,29 +145,59 @@ async def argo_data_pipeline(
         logger.info("Step 6: Starting export to Parquet...")
         try:
             file_prefix = Path(nc_file_path).stem
-            export_results = await export_to_parquet(
-                processed_df, 
-                output_dir, 
+            export_results = export_to_parquet(
+                processed_df,
+                output_dir,
                 file_prefix=file_prefix,
                 include_metadata=True
             )
-            
+
             pipeline_results["output_files"] = export_results
             pipeline_results["steps_completed"].append("export")
-            
+
             logger.info(f"Export complete - Files created: {len(export_results)}")
-            
+
         except Exception as e:
             error_msg = f"Export failed: {str(e)}"
             logger.error(error_msg)
             pipeline_results["errors"].append(error_msg)
             pipeline_results["status"] = "failed_export"
             return pipeline_results
-        
+
+        # Step 7: Load to Database (Optional)
+        if load_to_database:
+            if not LOADER_AVAILABLE:
+                error_msg = "Database loading requested but LOADER module not available"
+                logger.error(error_msg)
+                pipeline_results["errors"].append(error_msg)
+                pipeline_results["status"] = "failed_loader_unavailable"
+                return pipeline_results
+
+            logger.info("Step 7: Starting database loading...")
+            try:
+                db_results = await load_parquet_to_postgres(
+                    parquet_files_dir=output_dir,
+                    file_prefix=file_prefix,
+                    create_tables=create_db_tables,
+                    deduplication_strategy=deduplication_strategy
+                )
+
+                pipeline_results["database_results"] = db_results
+                pipeline_results["steps_completed"].append("database_loading")
+
+                logger.info(f"Database loading complete - Records loaded: {db_results.get('observations_processed', 0)}")
+
+            except Exception as e:
+                error_msg = f"Database loading failed: {str(e)}"
+                logger.error(error_msg)
+                pipeline_results["errors"].append(error_msg)
+                pipeline_results["status"] = "failed_database_loading"
+                return pipeline_results
+
         # Pipeline completed successfully
         pipeline_results["status"] = "completed"
         logger.info(f"Pipeline completed successfully for {file_name}")
-        
+
         return pipeline_results
         
     except Exception as e:
@@ -151,17 +216,23 @@ async def argo_batch_pipeline(
     nc_files: list,
     output_dir: str = "output",
     max_concurrent: int = 3,
-    skip_validation_errors: bool = False
+    skip_validation_errors: bool = False,
+    load_to_database: bool = False,
+    create_db_tables: bool = True,
+    deduplication_strategy: str = "upsert"
 ) -> Dict[str, Any]:
     """
     Process multiple Argo NetCDF files in batch
-    
+
     Args:
         nc_files: List of NetCDF file paths
         output_dir: Output directory
         max_concurrent: Maximum concurrent file processing
         skip_validation_errors: Continue processing files with validation errors
-        
+        load_to_database: Whether to load data into PostgreSQL database
+        create_db_tables: Whether to create database tables if they don't exist
+        deduplication_strategy: "upsert" or "ignore" for handling database duplicates
+
     Returns:
         Batch processing results
     """
@@ -182,9 +253,12 @@ async def argo_batch_pipeline(
         async with semaphore:
             try:
                 result = await argo_data_pipeline(
-                    file_path, 
-                    output_dir, 
-                    skip_validation_errors
+                    file_path,
+                    output_dir,
+                    skip_validation_errors,
+                    load_to_database,
+                    create_db_tables,
+                    deduplication_strategy
                 )
                 return file_path, result
             except Exception as e:
@@ -237,6 +311,12 @@ if __name__ == "__main__":
     parser.add_argument("--max-concurrent", type=int, default=3, help="Max concurrent files in batch mode")
     parser.add_argument("--skip-validation", action="store_true", help="Skip validation errors")
     parser.add_argument("--save-results", action="store_true", help="Save pipeline results to JSON")
+
+    # Database loading options
+    parser.add_argument("--load-to-database", action="store_true", help="Load processed data into PostgreSQL database")
+    parser.add_argument("--no-create-tables", action="store_true", help="Don't create database tables (assume they exist)")
+    parser.add_argument("--dedup-strategy", choices=["upsert", "ignore"], default="upsert",
+                       help="Deduplication strategy for database loading")
     
     args = parser.parse_args()
     
@@ -259,7 +339,10 @@ if __name__ == "__main__":
             [str(f) for f in nc_files],
             args.output,
             args.max_concurrent,
-            args.skip_validation
+            args.skip_validation,
+            args.load_to_database,
+            not args.no_create_tables,
+            args.dedup_strategy
         ))
         
         if args.save_results:
@@ -286,7 +369,10 @@ if __name__ == "__main__":
         results = asyncio.run(argo_data_pipeline(
             args.input,
             args.output,
-            args.skip_validation
+            args.skip_validation,
+            args.load_to_database,
+            not args.no_create_tables,
+            args.dedup_strategy
         ))
         
         if args.save_results:

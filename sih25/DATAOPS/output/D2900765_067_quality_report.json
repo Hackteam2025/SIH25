@@ -1,0 +1,135 @@
+{
+  "total_records": 64,
+  "completeness": {
+    "float_id": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "data_mode": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "timestamp": {
+      "non_null_count": 0,
+      "completeness_ratio": 0.0
+    },
+    "latitude": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "longitude": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "cycle_number": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "pres_qc": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "pres": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "pres_error": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "temp_qc": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "temp": {
+      "non_null_count": 61,
+      "completeness_ratio": 0.953125
+    },
+    "temp_error": {
+      "non_null_count": 61,
+      "completeness_ratio": 0.953125
+    },
+    "psal_qc": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "psal": {
+      "non_null_count": 60,
+      "completeness_ratio": 0.9375
+    },
+    "psal_error": {
+      "non_null_count": 60,
+      "completeness_ratio": 0.9375
+    },
+    "depth_m": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "n_levels": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "max_pressure": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "temp_range": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    },
+    "sal_range": {
+      "non_null_count": 64,
+      "completeness_ratio": 1.0
+    }
+  },
+  "qc_summary": {
+    "pres_qc": {
+      "1": 64
+    },
+    "temp_qc": {
+      "1": 61,
+      "4": 3
+    },
+    "psal_qc": {
+      "1": 60,
+      "4": 4
+    }
+  },
+  "coordinate_coverage": {
+    "valid_coordinates": 64,
+    "lat_range": [
+      14.926,
+      14.926
+    ],
+    "lon_range": [
+      88.67,
+      88.67
+    ]
+  },
+  "parameter_coverage": {
+    "pres": {
+      "available": true,
+      "valid_measurements": 64,
+      "coverage_ratio": 1.0
+    },
+    "temp": {
+      "available": true,
+      "valid_measurements": 61,
+      "coverage_ratio": 0.953125
+    },
+    "psal": {
+      "available": true,
+      "valid_measurements": 60,
+      "coverage_ratio": 0.9375
+    },
+    "doxy": {
+      "available": false
+    },
+    "chla": {
+      "available": false
+    },
+    "bbp": {
+      "available": false
+    }
+  }
+}
