@@ -194,14 +194,3 @@ sih25/
 *   **Security & Compliance:** PASS
 *   **Implementation Guidance:** PASS
 
-## Section 14: Next Steps
-
-**1. Story Manager Handoff**
-> **To:** Story Manager
-> **Subject:** Begin story creation for the FloatChat project.
-> The architecture is in `docs/architecture.md`. The first epic is "Data Ingestion and Storage", and the first story is "As a user, I want to upload a NetCDF file and have it processed and stored in the database."
-
-**2. Developer Handoff**
-> **To:** Development Team
-> **Subject:** Kick-off development for the FloatChat project.
-> The architecture is in `docs/architecture.md`. Review the Source Tree (Section 8) and Coding Standards (Section 10). The first task is to implement the `DATA LOADER` and the file ingestion `API` endpoint.
