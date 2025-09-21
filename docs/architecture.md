@@ -85,7 +85,7 @@ A core architectural challenge is the safe integration of an AI agent with the s
 
 #### Component Interaction Diagram
 ```mermaid
-graph TD
+graph LR
     subgraph "User Interface (FRONTEND)"
         direction LR
         UI_Admin["Data Admin UI<br>(Upload + Preprocess Button)"]
