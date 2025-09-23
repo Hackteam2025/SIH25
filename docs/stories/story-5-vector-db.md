@@ -100,19 +100,19 @@ async def get_profile_context(profile_id: str) -> ProfileContext
 - **Storage**: Vector database size should be reasonable for demo environment
 - **Integration**: Minimal changes to existing working components
 
-### Missing Information
+### key Informations
 
 ❗ **User Input Needed:**
-1. **Embedding Model**: Should we use sentence-transformers, OpenAI embeddings, or domain-specific models?
-2. **ChromaDB Location**: Should vector database be co-located with PostgreSQL or separate service?
-3. **Update Strategy**: How should embeddings be updated when new data is processed?
-4. **Search Weighting**: How should vector similarity be balanced with structured query results?
+1. **Embedding Model**: we will use `mistral-embed` model whose api key is already stored as `MISTRAL_API_KEY`
+2. **ChromaDB Location**: being present 
+3. **Update Strategy**: idk please find out and tell me before story implementation on how you will handle this 
+4. **Search Weighting**: idk please find out and tell me before story implementation on how you will handle this 
 
 ## Tasks / Subtasks
 
 - [ ] **Task 1: Set up ChromaDB environment**
   - [ ] Install ChromaDB in existing uv environment
-  - [ ] Create `sih25/VECTOR/` directory for vector database operations
+  - [ ] Create `sih25/METADATA/` directory for vector database operations
   - [ ] Configure persistent storage location for ChromaDB collections
   - [ ] Test basic embedding storage and retrieval functionality
 
