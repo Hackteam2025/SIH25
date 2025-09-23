@@ -56,6 +56,12 @@ dependencies = [
     "matplotlib>=3.9.4",
     "seaborn>=0.13.2",
     "nbconvert>=7.16.6",
+    "agno>=2.0.7",
+    "groq>=0.31.1",
+    # Voice AI Integration Dependencies
+    "loguru>=0.7.0",
+    "pipecat-ai[openai,deepgram]>=0.0.30",
+    "aiohttp>=3.8.0",
 ]
 
 [build-system]

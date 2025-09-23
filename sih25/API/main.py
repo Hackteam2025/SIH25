@@ -26,6 +26,9 @@ from sih25.API.tools.core_tools import argo_tools
 from sih25.API.safety import query_safety
 from sih25.API.mcp_protocol import mcp_handler
 
+# Import AI Agent API
+from sih25.AGENT.api import router as agent_router
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -301,6 +304,9 @@ mcp = FastApiMCP(
 
 # Mount MCP server
 mcp.mount_http()
+
+# Include Agent API router
+app.include_router(agent_router)
 
 
 if __name__ == "__main__":
