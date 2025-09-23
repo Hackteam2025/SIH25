@@ -7,7 +7,7 @@ Provides secure, validated database access tools for AI agents
 import os
 import logging
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional, List
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
@@ -23,8 +23,12 @@ from sih25.API.models import (
     ToolResponse
 )
 from sih25.API.tools.core_tools import argo_tools
+from sih25.API.tools.vector_search import vector_search_tools
 from sih25.API.safety import query_safety
 from sih25.API.mcp_protocol import mcp_handler
+
+# Import metadata processing
+from sih25.METADATA.processor import get_metadata_processor
 
 # Import AI Agent API
 from sih25.AGENT.api import router as agent_router
@@ -126,7 +130,7 @@ async def get_mcp_status():
         return {
             "status": "operational",
             "database_connected": db_healthy,
-            "tools_available": 4,
+            "tools_available": 8,
             "last_updated": datetime.utcnow().isoformat(),
             "protocol_version": "MCP 1.0",
             "safety_features": [
@@ -293,6 +297,173 @@ async def get_profile_statistics_tool(
     # Add safety metadata
     response.metadata.update(safety_metadata)
     return response
+
+
+# Vector Search Tool Endpoints
+@app.post("/tools/semantic_search",
+          summary="Semantic search for ARGO profiles",
+          description="Natural language search through ARGO profile metadata using vector embeddings")
+async def semantic_search_tool(
+    query: str,
+    limit: int = 10,
+    region_filter: Optional[str] = None,
+    similarity_threshold: float = 0.5
+) -> ToolResponse:
+    """Perform semantic search on profile metadata"""
+    return await vector_search_tools.semantic_search_profiles(
+        query=query,
+        limit=limit,
+        region_filter=region_filter,
+        similarity_threshold=similarity_threshold
+    )
+
+
+@app.post("/tools/find_similar_profiles",
+          summary="Find profiles similar to a reference profile",
+          description="Discover profiles with similar characteristics to a given profile")
+async def find_similar_profiles_tool(
+    profile_id: str,
+    similarity_threshold: float = 0.7,
+    limit: int = 10
+) -> ToolResponse:
+    """Find profiles similar to a given profile"""
+    return await vector_search_tools.find_similar_profiles(
+        profile_id=profile_id,
+        similarity_threshold=similarity_threshold,
+        limit=limit
+    )
+
+
+@app.post("/tools/search_by_description",
+          summary="Search profiles by natural language description",
+          description="Find profiles using detailed natural language descriptions with filters")
+async def search_by_description_tool(
+    description: str,
+    region: Optional[str] = None,
+    season: Optional[str] = None,
+    limit: int = 10
+) -> ToolResponse:
+    """Search profiles by comprehensive description"""
+    return await vector_search_tools.search_by_description(
+        description=description,
+        region=region,
+        season=season,
+        limit=limit
+    )
+
+
+@app.post("/tools/hybrid_search",
+          summary="Hybrid vector and structured search",
+          description="Combine semantic search with geographic and temporal filters")
+async def hybrid_search_tool(
+    query: str,
+    min_lat: Optional[float] = None,
+    max_lat: Optional[float] = None,
+    min_lon: Optional[float] = None,
+    max_lon: Optional[float] = None,
+    parameters: Optional[List[str]] = None,
+    limit: int = 10,
+    vector_weight: float = 0.7
+) -> ToolResponse:
+    """Perform hybrid semantic and structured search"""
+    lat_range = (min_lat, max_lat) if min_lat is not None and max_lat is not None else None
+    lon_range = (min_lon, max_lon) if min_lon is not None and max_lon is not None else None
+
+    return await vector_search_tools.hybrid_search(
+        query=query,
+        lat_range=lat_range,
+        lon_range=lon_range,
+        parameters=parameters,
+        limit=limit,
+        vector_weight=vector_weight
+    )
+
+
+# Metadata Processing Endpoints
+@app.post("/metadata/upload",
+          summary="Upload and process metadata files",
+          description="Upload metadata files for vector database processing")
+async def upload_metadata_file(file_path: str, filename: str):
+    """Process uploaded metadata file"""
+    processor = get_metadata_processor()
+    result = await processor.process_uploaded_file(file_path, filename)
+
+    if result["success"]:
+        return {
+            "success": True,
+            "message": result["message"],
+            "processed_count": result["processed_count"],
+            "file_info": result["file_info"]
+        }
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Processing failed: {result['error']}"
+        )
+
+
+@app.post("/metadata/create_sample",
+          summary="Create sample metadata for testing",
+          description="Generate sample metadata entries for demonstration")
+async def create_sample_metadata():
+    """Create sample metadata for testing"""
+    processor = get_metadata_processor()
+    sample_profiles = await processor.create_sample_metadata()
+
+    # Store in vector database
+    from sih25.METADATA.vector_store import get_vector_store
+    vector_store = await get_vector_store()
+    success = await vector_store.add_profiles(sample_profiles)
+
+    if success:
+        return {
+            "success": True,
+            "message": f"Created {len(sample_profiles)} sample metadata entries",
+            "profiles_created": len(sample_profiles)
+        }
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create sample metadata"
+        )
+
+
+@app.get("/metadata/stats",
+        summary="Get metadata processing statistics",
+        description="Retrieve statistics about the vector database")
+async def get_metadata_stats():
+    """Get processing and vector store statistics"""
+    processor = get_metadata_processor()
+    stats = await processor.get_processing_stats()
+    return stats
+
+
+@app.post("/admin/reset_vector_db",
+          summary="Reset vector database",
+          description="Clear all vector embeddings and reset the ChromaDB collection")
+async def reset_vector_database():
+    """Reset the vector database"""
+    try:
+        from sih25.METADATA.vector_store import get_vector_store
+        vector_store = await get_vector_store()
+        success = await vector_store.reset_collection()
+
+        if success:
+            return {
+                "success": True,
+                "message": "Vector database reset successfully"
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to reset vector database"
+            )
+    except Exception as e:
+        logger.error(f"Vector database reset failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Reset failed: {str(e)}"
+        )
 
 
 # Create MCP server instance
