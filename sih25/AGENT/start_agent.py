@@ -10,7 +10,11 @@ import logging
 import os
 from typing import Optional
 
+from dotenv import load_dotenv
 from sih25.AGENT.float_chat_agent import FloatChatAgent
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,9 +33,8 @@ async def interactive_chat():
     print("🔧 Initializing agent...")
     agent = FloatChatAgent(
         mcp_server_url=os.getenv("MCP_SERVER_URL", "http://localhost:8000"),
-        llm_provider=os.getenv("LLM_PROVIDER", "openai"),
-        model_name=os.getenv("MODEL_NAME", "gpt-4"),
-        api_key=os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+        model_name=os.getenv("GROQ_MODEL_NAME"),
+        api_key=os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
     )
 
     success = await agent.initialize()
@@ -182,11 +185,18 @@ async def main():
 
 if __name__ == "__main__":
     # Check for required environment variables
-    if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GROQ_API_KEY")
+
+    if not api_key:
         print("⚠️  Warning: No API keys found!")
-        print("Please set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable")
-        print("Example: export OPENAI_API_KEY='your-key-here'")
+        print("Please set one of these environment variables:")
+        print("- OPENAI_API_KEY='your-openai-key-here'")
+        print("- ANTHROPIC_API_KEY='your-anthropic-key-here'")
+        print("- GROQ_API_KEY='your-groq-key-here'")
         print()
+        # Don't exit, let the program continue for now
+    else:
+        print("✅ API key found, initializing agent...")
 
     try:
         asyncio.run(main())

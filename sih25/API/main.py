@@ -28,10 +28,9 @@ from sih25.API.safety import query_safety
 from sih25.API.mcp_protocol import mcp_handler
 
 # Import metadata processing
-from sih25.METADATA.processor import get_metadata_processor
+from sih25.DATAOPS.METADATA.processor import get_metadata_processor
 
-# Import AI Agent API
-from sih25.AGENT.api import router as agent_router
+# AI Agent API is now in a separate service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -158,12 +157,18 @@ async def list_profiles_tool(
     max_lat: float,
     min_lon: float,
     max_lon: float,
-    time_start: datetime,
-    time_end: datetime,
+    time_start: Optional[datetime] = None,
+    time_end: Optional[datetime] = None,
     has_bgc: bool = False,
     max_results: int = 100
 ) -> ToolResponse:
     """List profiles within a geographic region and time range"""
+
+    # Set default time range if not provided
+    if time_start is None:
+        time_start = datetime(1999, 1, 1)  # ARGO program start
+    if time_end is None:
+        time_end = datetime.utcnow()
 
     # Safety validation
     query_params = {
@@ -180,7 +185,7 @@ async def list_profiles_tool(
     if not is_safe:
         return ToolResponse(
             success=False,
-            errors=[{"error": "validation_error", "message": "; ".join(safety_errors)}],
+            errors=[{"error": "validation_error", "message": "; ".join(safety_errors), "details": safety_metadata}],
             metadata=safety_metadata
         )
 
@@ -216,7 +221,7 @@ async def get_profile_details_tool(profile_id: str) -> ToolResponse:
     if not is_safe:
         return ToolResponse(
             success=False,
-            errors=[{"error": "validation_error", "message": "; ".join(safety_errors)}],
+            errors=[{"error": "validation_error", "message": "; ".join(safety_errors), "details": safety_metadata}],
             metadata=safety_metadata
         )
 
@@ -253,7 +258,7 @@ async def search_floats_near_tool(
     if not is_safe:
         return ToolResponse(
             success=False,
-            errors=[{"error": "validation_error", "message": "; ".join(safety_errors)}],
+            errors=[{"error": "validation_error", "message": "; ".join(safety_errors), "details": safety_metadata}],
             metadata=safety_metadata
         )
 
@@ -285,7 +290,7 @@ async def get_profile_statistics_tool(
     if not is_safe:
         return ToolResponse(
             success=False,
-            errors=[{"error": "validation_error", "message": "; ".join(safety_errors)}],
+            errors=[{"error": "validation_error", "message": "; ".join(safety_errors), "details": safety_metadata}],
             metadata=safety_metadata
         )
 
@@ -411,7 +416,7 @@ async def create_sample_metadata():
     sample_profiles = await processor.create_sample_metadata()
 
     # Store in vector database
-    from sih25.METADATA.vector_store import get_vector_store
+    from sih25.DATAOPS.METADATA.vector_store import get_vector_store
     vector_store = await get_vector_store()
     success = await vector_store.add_profiles(sample_profiles)
 
@@ -444,7 +449,7 @@ async def get_metadata_stats():
 async def reset_vector_database():
     """Reset the vector database"""
     try:
-        from sih25.METADATA.vector_store import get_vector_store
+        from sih25.DATAOPS.METADATA.vector_store import get_vector_store
         vector_store = await get_vector_store()
         success = await vector_store.reset_collection()
 
@@ -476,8 +481,8 @@ mcp = FastApiMCP(
 # Mount MCP server
 mcp.mount_http()
 
-# Include Agent API router
-app.include_router(agent_router)
+# Agent API is now in a separate service
+# app.include_router(agent_router)
 
 
 if __name__ == "__main__":

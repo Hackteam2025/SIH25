@@ -1000,11 +1000,14 @@ def handle_reset(n_clicks):
 def handle_profile_processing(process_clicks, file_contents, filenames):
     if process_clicks > 0 and file_contents:
         try:
+            # Create a dictionary of filename: content
+            files_to_process = {name: content for name, content in zip(filenames, file_contents)}
+
             # Process NetCDF files using existing DataOps orchestrator
             response = requests.post(
                 f"{DATAOPS_API_URL}/process",
-                json={"files": filenames},
-                timeout=30
+                json={"files": files_to_process},
+                timeout=60  # Increased timeout for file processing
             )
 
             if response.status_code == 200:
@@ -1012,13 +1015,14 @@ def handle_profile_processing(process_clicks, file_contents, filenames):
                     "✅ Profile data processed successfully! Data is now available for analysis.",
                 ], style={"color": "#10b981", "font-weight": "bold", "font-size": "14px"})
             else:
+                error_detail = response.json().get("detail", "Unknown error")
                 return html.Div([
-                    "⚠️ Profile processing failed. Please check NetCDF file formats and try again.",
+                    f"⚠️ Profile processing failed: {error_detail}",
                 ], style={"color": "#f59e0b", "font-weight": "bold", "font-size": "14px"})
 
         except requests.exceptions.RequestException:
             return html.Div([
-                "📡 DataOps service is starting up. Please try again in a moment.",
+                "📡 DataOps service is starting up or unavailable. Please try again in a moment.",
             ], style={"color": "#6b7280", "font-weight": "bold", "font-size": "14px"})
 
     return html.Div("Ready to process NetCDF profile files",
@@ -1070,7 +1074,7 @@ def handle_metadata_processing(process_clicks, file_contents, filenames):
 
 # Create sample metadata for testing
 @app.callback(
-    Output("metadata-processing-status", "children"),
+    Output("metadata-processing-status", "children", allow_duplicate=True),
     [Input("create-sample-btn", "n_clicks")],
     prevent_initial_call=True
 )

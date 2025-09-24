@@ -1,8 +1,8 @@
 """
 Agent API Module
 
-FastAPI endpoints for the AGNO-based FloatChatAgent.
-Provides conversational interface to oceanographic data.
+FastAPI endpoints for the JARVIS Ocean Agent.
+Provides natural conversational interface to oceanographic data.
 """
 
 import logging
@@ -10,12 +10,12 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from sih25.AGENT.float_chat_agent import FloatChatAgent, AgentResponse
+from sih25.AGENT.jarvis_ocean_agent import JarvisOceanAgent, JarvisResponse
 
 logger = logging.getLogger(__name__)
 
-# Global agent instance
-agent: Optional[FloatChatAgent] = None
+# Global JARVIS agent instance
+agent: Optional[JarvisOceanAgent] = None
 
 # API Models
 class ChatRequest(BaseModel):
@@ -38,104 +38,111 @@ class ChatResponse(BaseModel):
 
 
 # Router
-router = APIRouter(prefix="/agent", tags=["AI Agent"])
+router = APIRouter(prefix="/agent", tags=["JARVIS Ocean Agent"])
 
 
-async def get_agent() -> FloatChatAgent:
-    """Dependency to get initialized agent instance."""
+async def get_agent() -> JarvisOceanAgent:
+    """Dependency to get initialized JARVIS agent instance."""
     global agent
     if agent is None:
-        agent = FloatChatAgent()
-        await agent.initialize()
+        agent = JarvisOceanAgent()
+        if not await agent.initialize():
+            raise HTTPException(status_code=500, detail="Failed to initialize JARVIS")
+        logger.info("JARVIS Ocean Agent online")
     return agent
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_agent(
+async def chat_with_jarvis(
     request: ChatRequest,
-    agent_instance: FloatChatAgent = Depends(get_agent)
+    agent_instance: JarvisOceanAgent = Depends(get_agent)
 ) -> ChatResponse:
     """
-    Chat with the FloatChatAgent about oceanographic data.
+    Chat with JARVIS about oceanographic data.
 
     Args:
         request: Chat request with message and optional session context
 
     Returns:
-        Agent response with conversation and data insights
+        JARVIS response with conversation and data insights
     """
     try:
-        # Process the query
-        agent_response = await agent_instance.process_query(
-            user_message=request.message,
+        # Process the query with JARVIS
+        jarvis_response = await agent_instance.process_query(
+            message=request.message,
             session_id=request.session_id,
+            voice_input=request.context.get("voice_input", False) if request.context else False,
             context=request.context
         )
 
         # Convert to API response format
         return ChatResponse(
-            success=agent_response.success,
-            response=agent_response.response_text,
-            session_id=agent_response.metadata.get("session_id", "unknown"),
-            tool_calls=agent_response.tool_calls_made,
-            visualization_data=agent_response.data_for_visualization,
-            scientific_insights=agent_response.scientific_insights,
-            follow_up_suggestions=agent_response.follow_up_suggestions,
-            metadata=agent_response.metadata
+            success=True,
+            response=jarvis_response.response_text,
+            session_id=request.session_id or "jarvis_default",
+            tool_calls=jarvis_response.tools_used,
+            visualization_data=jarvis_response.data_retrieved,
+            scientific_insights=[],
+            follow_up_suggestions=jarvis_response.proactive_suggestions,
+            metadata={
+                "voice_compatible": jarvis_response.voice_compatible,
+                "visualization_needed": jarvis_response.visualization_needed,
+                "personality": "JARVIS Ocean Agent"
+            }
         )
 
     except Exception as e:
-        logger.error(f"Chat endpoint error: {e}")
+        logger.error(f"JARVIS chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/session/{session_id}/summary")
 async def get_session_summary(
     session_id: str,
-    agent_instance: FloatChatAgent = Depends(get_agent)
+    agent_instance: JarvisOceanAgent = Depends(get_agent)
 ) -> Dict[str, Any]:
     """
-    Get summary of a conversation session.
+    Get summary of a JARVIS conversation session.
 
     Args:
         session_id: Session identifier
 
     Returns:
-        Session summary with conversation metrics
+        Session summary with conversation history
     """
     try:
-        summary = await agent_instance.get_session_summary(session_id)
+        summary = agent_instance.get_session_summary(session_id)
         if summary is None:
-            raise HTTPException(status_code=404, detail="Session not found")
+            raise HTTPException(status_code=404, detail="Session not found in JARVIS memory")
         return summary
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Session summary error: {e}")
+        logger.error(f"JARVIS session error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health")
-async def agent_health() -> Dict[str, str]:
-    """Health check for the agent service."""
+async def jarvis_health() -> Dict[str, str]:
+    """Health check for JARVIS Ocean Agent service."""
     global agent
     if agent is None:
-        return {"status": "not_initialized"}
-    return {"status": "healthy"}
+        return {"status": "offline", "agent": "JARVIS"}
+    return {"status": "online", "agent": "JARVIS Ocean Agent", "personality": "Ready to assist"}
 
 
 @router.post("/initialize")
-async def initialize_agent() -> Dict[str, str]:
-    """Initialize or reinitialize the agent."""
+async def initialize_jarvis() -> Dict[str, str]:
+    """Initialize or reinitialize JARVIS Ocean Agent."""
     global agent
     try:
-        agent = FloatChatAgent()
+        agent = JarvisOceanAgent()
         success = await agent.initialize()
         if success:
-            return {"status": "initialized"}
+            return {"status": "initialized", "agent": "JARVIS Ocean Agent", "message": "Systems online. How may I assist you?"}
         else:
-            raise HTTPException(status_code=500, detail="Failed to initialize agent")
+            raise HTTPException(status_code=500, detail="Failed to initialize JARVIS systems")
     except Exception as e:
-        logger.error(f"Agent initialization error: {e}")
+        logger.error(f"JARVIS initialization error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -10,7 +10,7 @@ export OPENAI_API_KEY="your-openai-api-key"
 # OR for Anthropic Claude
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 export LLM_PROVIDER="anthropic"
-export MODEL_NAME="claude-3-5-sonnet-20241022"
+export GROQ_MODEL_NAME="claude-3-5-sonnet-20241022"
 ```
 
 ### 2. Start the MCP Tool Server

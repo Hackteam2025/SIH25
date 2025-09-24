@@ -67,31 +67,52 @@ class MCPToolClient:
         """
         try:
             # Get tool metadata from MCP protocol enhancement
-            response = await self.client.get(f"{self.server_url}/mcp/tools")
+            response = await self.client.get(f"{self.server_url}/mcp/tools/descriptions")
             if response.status_code == 200:
-                self.available_tools = response.json()
+                data = response.json()
+                self.available_tools = data.get("tools", {})
             else:
-                # Fallback: infer tools from API endpoints
+                # Fallback: use correct API endpoints
                 self.available_tools = {
                     "list_profiles": {
                         "description": "Search for ARGO oceanographic profiles",
-                        "endpoint": "/profiles/list",
+                        "endpoint": "/tools/list_profiles",
                         "method": "POST"
                     },
                     "get_profile_details": {
                         "description": "Get detailed information about a specific profile",
-                        "endpoint": "/profiles/{profile_id}",
-                        "method": "GET"
+                        "endpoint": "/tools/get_profile_details",
+                        "method": "POST"
                     },
                     "search_floats_near": {
                         "description": "Find ARGO floats near specified coordinates",
-                        "endpoint": "/floats/search",
+                        "endpoint": "/tools/search_floats_near",
                         "method": "POST"
                     },
                     "get_profile_statistics": {
                         "description": "Calculate statistics for profile variables",
-                        "endpoint": "/profiles/{profile_id}/stats/{variable}",
-                        "method": "GET"
+                        "endpoint": "/tools/get_profile_statistics",
+                        "method": "POST"
+                    },
+                    "semantic_search": {
+                        "description": "Semantic search for ARGO profiles using natural language",
+                        "endpoint": "/tools/semantic_search",
+                        "method": "POST"
+                    },
+                    "find_similar_profiles": {
+                        "description": "Find profiles similar to a reference profile",
+                        "endpoint": "/tools/find_similar_profiles",
+                        "method": "POST"
+                    },
+                    "search_by_description": {
+                        "description": "Search profiles by natural language description",
+                        "endpoint": "/tools/search_by_description",
+                        "method": "POST"
+                    },
+                    "hybrid_search": {
+                        "description": "Hybrid vector and structured search",
+                        "endpoint": "/tools/hybrid_search",
+                        "method": "POST"
                     }
                 }
 
@@ -137,6 +158,14 @@ class MCPToolClient:
                 result = await self._call_search_floats_near(parameters)
             elif tool_name == "get_profile_statistics":
                 result = await self._call_get_profile_statistics(parameters)
+            elif tool_name == "semantic_search":
+                result = await self._call_semantic_search(parameters)
+            elif tool_name == "find_similar_profiles":
+                result = await self._call_find_similar_profiles(parameters)
+            elif tool_name == "search_by_description":
+                result = await self._call_search_by_description(parameters)
+            elif tool_name == "hybrid_search":
+                result = await self._call_hybrid_search(parameters)
             else:
                 result = ToolResponse(
                     success=False,
@@ -162,9 +191,25 @@ class MCPToolClient:
 
     async def _call_list_profiles(self, parameters: Dict[str, Any]) -> ToolResponse:
         """Call the list_profiles endpoint."""
+        # Map parameter names from agent format to API format
+        mapped_params = {}
+        if 'lat_min' in parameters:
+            mapped_params['min_lat'] = parameters['lat_min']
+        if 'lat_max' in parameters:
+            mapped_params['max_lat'] = parameters['lat_max']
+        if 'lon_min' in parameters:
+            mapped_params['min_lon'] = parameters['lon_min']
+        if 'lon_max' in parameters:
+            mapped_params['max_lon'] = parameters['lon_max']
+
+        # Copy other parameters as-is
+        for key, value in parameters.items():
+            if key not in ['lat_min', 'lat_max', 'lon_min', 'lon_max']:
+                mapped_params[key] = value
+
         response = await self.client.post(
-            f"{self.server_url}/profiles/list",
-            json=parameters
+            f"{self.server_url}/tools/list_profiles",
+            params=mapped_params
         )
 
         if response.status_code == 200:
@@ -172,36 +217,31 @@ class MCPToolClient:
         else:
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}"}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
                 execution_time_ms=0
             )
 
     async def _call_get_profile_details(self, parameters: Dict[str, Any]) -> ToolResponse:
         """Call the get_profile_details endpoint."""
-        profile_id = parameters.get("profile_id")
-        if not profile_id:
-            return ToolResponse(
-                success=False,
-                errors=[{"error": "missing_parameter", "message": "profile_id is required"}],
-                execution_time_ms=0
-            )
-
-        response = await self.client.get(f"{self.server_url}/profiles/{profile_id}")
+        response = await self.client.post(
+            f"{self.server_url}/tools/get_profile_details",
+            params=parameters
+        )
 
         if response.status_code == 200:
             return ToolResponse.model_validate(response.json())
         else:
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}"}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
                 execution_time_ms=0
             )
 
     async def _call_search_floats_near(self, parameters: Dict[str, Any]) -> ToolResponse:
         """Call the search_floats_near endpoint."""
         response = await self.client.post(
-            f"{self.server_url}/floats/search",
-            json=parameters
+            f"{self.server_url}/tools/search_floats_near",
+            params=parameters
         )
 
         if response.status_code == 200:
@@ -209,30 +249,87 @@ class MCPToolClient:
         else:
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}"}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
                 execution_time_ms=0
             )
 
     async def _call_get_profile_statistics(self, parameters: Dict[str, Any]) -> ToolResponse:
         """Call the get_profile_statistics endpoint."""
-        profile_id = parameters.get("profile_id")
-        variable = parameters.get("variable")
-
-        if not profile_id or not variable:
-            return ToolResponse(
-                success=False,
-                errors=[{"error": "missing_parameter", "message": "profile_id and variable are required"}],
-                execution_time_ms=0
-            )
-
-        response = await self.client.get(f"{self.server_url}/profiles/{profile_id}/stats/{variable}")
+        response = await self.client.post(
+            f"{self.server_url}/tools/get_profile_statistics",
+            params=parameters
+        )
 
         if response.status_code == 200:
             return ToolResponse.model_validate(response.json())
         else:
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}"}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                execution_time_ms=0
+            )
+
+    async def _call_semantic_search(self, parameters: Dict[str, Any]) -> ToolResponse:
+        """Call the semantic_search endpoint."""
+        response = await self.client.post(
+            f"{self.server_url}/tools/semantic_search",
+            params=parameters
+        )
+
+        if response.status_code == 200:
+            return ToolResponse.model_validate(response.json())
+        else:
+            return ToolResponse(
+                success=False,
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                execution_time_ms=0
+            )
+
+    async def _call_find_similar_profiles(self, parameters: Dict[str, Any]) -> ToolResponse:
+        """Call the find_similar_profiles endpoint."""
+        response = await self.client.post(
+            f"{self.server_url}/tools/find_similar_profiles",
+            params=parameters
+        )
+
+        if response.status_code == 200:
+            return ToolResponse.model_validate(response.json())
+        else:
+            return ToolResponse(
+                success=False,
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                execution_time_ms=0
+            )
+
+    async def _call_search_by_description(self, parameters: Dict[str, Any]) -> ToolResponse:
+        """Call the search_by_description endpoint."""
+        response = await self.client.post(
+            f"{self.server_url}/tools/search_by_description",
+            params=parameters
+        )
+
+        if response.status_code == 200:
+            return ToolResponse.model_validate(response.json())
+        else:
+            return ToolResponse(
+                success=False,
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                execution_time_ms=0
+            )
+
+    async def _call_hybrid_search(self, parameters: Dict[str, Any]) -> ToolResponse:
+        """Call the hybrid_search endpoint."""
+        response = await self.client.post(
+            f"{self.server_url}/tools/hybrid_search",
+            params=parameters
+        )
+
+        if response.status_code == 200:
+            return ToolResponse.model_validate(response.json())
+        else:
+            return ToolResponse(
+                success=False,
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
                 execution_time_ms=0
             )
 

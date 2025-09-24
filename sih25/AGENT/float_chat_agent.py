@@ -9,9 +9,11 @@ import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import uuid
+import os
+from dotenv import load_dotenv
 
 from agno.agent import Agent
-from agno.models.groq import GroqChat
+from agno.models.groq import Groq
 from pydantic import BaseModel
 
 from .mcp_client import MCPToolClient
@@ -20,6 +22,10 @@ from .scientific_context import ScientificContext
 
 logger = logging.getLogger(__name__)
 
+if load_dotenv("../../../.env"):
+    logger.warning("Loaded environment variables from .env")
+else:
+    logger.error("No .env file found, using system environment variables")
 
 class AgentResponse(BaseModel):
     """Response from the FloatChatAgent."""
@@ -45,7 +51,7 @@ class FloatChatAgent:
         self,
         mcp_server_url: str = "http://localhost:8000",
         model_name: str = "moonshotai/kimi-k2-instruct-0905",
-        api_key: Optional[str] = None
+        api_key: Optional[str] = os.getenv("GROQ_API_KEY") 
     ):
         """
         Initialize FloatChatAgent.
@@ -66,7 +72,7 @@ class FloatChatAgent:
     def _setup_agno_agent(self, model_name: str, api_key: Optional[str]):
         """Setup the AGNO agent with Groq LLM."""
         # Initialize Groq model
-        model = GroqChat(id=model_name, api_key=api_key)
+        model = Groq(id=model_name, api_key=api_key)
 
         # Create AGNO agent with oceanographic expertise
         self.agent = Agent(
@@ -84,9 +90,7 @@ class FloatChatAgent:
                 "Be conversational but maintain scientific rigor."
             ],
             tools=[],  # Tools will be added dynamically
-            markdown=True,
-            show_tool_calls=True,
-            add_history_to_messages=True
+            markdown=True
         )
 
     async def initialize(self) -> bool:
@@ -163,7 +167,7 @@ class FloatChatAgent:
 
             for tool_name in suggested_tools[:3]:  # Limit to 3 tools per query
                 tool_params = await self._prepare_tool_parameters(
-                    tool_name, query_interpretation, conversation_context
+                    tool_name, query_interpretation, conversation_context, user_message
                 )
 
                 if tool_params:
@@ -236,7 +240,8 @@ class FloatChatAgent:
         self,
         tool_name: str,
         query_interpretation: Dict[str, Any],
-        conversation_context: Dict[str, Any]
+        conversation_context: Dict[str, Any],
+        user_message: str = ""
     ) -> Optional[Dict[str, Any]]:
         """Prepare parameters for a specific tool call."""
         params = {}
@@ -259,10 +264,41 @@ class FloatChatAgent:
             else:
                 # Use default or conversation context
                 region = spatial.get("region", "global")
-                if region == "equatorial":
-                    params.update({"lat_min": -5, "lat_max": 5, "lon_min": -180, "lon_max": 180})
-                elif region == "tropical":
-                    params.update({"lat_min": -23.5, "lat_max": 23.5, "lon_min": -180, "lon_max": 180})
+
+                # Define ocean regions with their bounding boxes
+                ocean_regions = {
+                    "mediterranean": {"lat_min": 30, "lat_max": 46, "lon_min": -6, "lon_max": 37},
+                    "north_atlantic": {"lat_min": 20, "lat_max": 60, "lon_min": -80, "lon_max": 0},
+                    "south_atlantic": {"lat_min": -60, "lat_max": 0, "lon_min": -70, "lon_max": 20},
+                    "north_pacific": {"lat_min": 20, "lat_max": 60, "lon_min": 120, "lon_max": -120},
+                    "south_pacific": {"lat_min": -60, "lat_max": 0, "lon_min": 150, "lon_max": -70},
+                    "indian": {"lat_min": -60, "lat_max": 30, "lon_min": 20, "lon_max": 120},
+                    "arctic": {"lat_min": 66, "lat_max": 90, "lon_min": -180, "lon_max": 180},
+                    "southern": {"lat_min": -90, "lat_max": -60, "lon_min": -180, "lon_max": 180},
+                    "equatorial": {"lat_min": -5, "lat_max": 5, "lon_min": -180, "lon_max": 180},
+                    "tropical": {"lat_min": -23.5, "lat_max": 23.5, "lon_min": -180, "lon_max": 180},
+                    "caribbean": {"lat_min": 10, "lat_max": 27, "lon_min": -90, "lon_max": -60},
+                    "gulf_mexico": {"lat_min": 18, "lat_max": 31, "lon_min": -98, "lon_max": -80},
+                    "red_sea": {"lat_min": 12, "lat_max": 30, "lon_min": 32, "lon_max": 44},
+                    "baltic": {"lat_min": 53, "lat_max": 66, "lon_min": 10, "lon_max": 30},
+                    "black_sea": {"lat_min": 40.5, "lat_max": 47, "lon_min": 27, "lon_max": 42}
+                }
+
+                # Check if the message contains any region keywords
+                message_lower = user_message.lower()
+                detected_region = None
+
+                for region_name, bounds in ocean_regions.items():
+                    # Check for region name in the message
+                    if region_name.replace("_", " ") in message_lower or region_name.replace("_", "") in message_lower:
+                        detected_region = region_name
+                        break
+
+                # Use detected region or specified region
+                final_region = detected_region or region
+
+                if final_region in ocean_regions:
+                    params.update(ocean_regions[final_region])
                 else:
                     # Default global search with reasonable limits
                     params.update({"lat_min": -90, "lat_max": 90, "lon_min": -180, "lon_max": 180})

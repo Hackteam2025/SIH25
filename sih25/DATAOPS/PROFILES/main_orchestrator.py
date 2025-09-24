@@ -12,36 +12,14 @@ from prefect import flow, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 
 # Import our modular tasks
-from step3_schema_explorer import explore_argo_schema
-from step4_data_validator import validate_argo_data
-from step5_data_preprocessor import preprocess_argo_data
-from step6_data_exporter_parquet import export_to_parquet
+from .step3_schema_explorer import explore_argo_schema
+from .step4_data_validator import validate_argo_data
+from .step5_data_preprocessor import preprocess_argo_data
+from .step6_data_exporter_parquet import export_to_parquet
 
 # Import DATA LOADER
 try:
-    # Try different import paths depending on how the script is run
-    try:
-        from ..LOADER.data_loader import load_parquet_to_postgres
-    except ImportError:
-        # If running from DATAOPS directory, try absolute import
-        import sys
-        import os
-        from pathlib import Path
-
-        # Add the sih25 directory to Python path
-        sih25_dir = Path(__file__).parent.parent
-        if str(sih25_dir) not in sys.path:
-            sys.path.insert(0, str(sih25_dir))
-
-        try:
-            from LOADER.data_loader import load_parquet_to_postgres
-        except ImportError:
-            # Try absolute import from project root
-            project_root = Path(__file__).parent.parent.parent
-            if str(project_root) not in sys.path:
-                sys.path.insert(0, str(project_root))
-
-            from sih25.LOADER.data_loader import load_parquet_to_postgres
+    from sih25.LOADER.data_loader import load_parquet_to_postgres
     LOADER_AVAILABLE = True
 except ImportError as e:
     LOADER_AVAILABLE = False

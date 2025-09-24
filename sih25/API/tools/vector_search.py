@@ -9,7 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from sih25.METADATA.vector_store import get_vector_store
+from sih25.DATAOPS.METADATA.vector_store import get_vector_store
 from sih25.API.models import ToolResponse
 
 logger = logging.getLogger(__name__)

@@ -19,7 +19,7 @@ async def test_vector_store():
 
     try:
         # Test import
-        from sih25.METADATA.vector_store import get_vector_store
+        from sih25.DATAOPS.METADATA.vector_store import get_vector_store
         print("✅ Import successful")
 
         # Initialize vector store
@@ -134,7 +134,7 @@ async def test_metadata_processor():
     print("\n📝 Testing Metadata Processor...")
 
     try:
-        from sih25.METADATA.processor import get_metadata_processor
+        from sih25.DATAOPS.METADATA.processor import get_metadata_processor
         print("✅ Metadata processor import successful")
 
         processor = get_metadata_processor()
