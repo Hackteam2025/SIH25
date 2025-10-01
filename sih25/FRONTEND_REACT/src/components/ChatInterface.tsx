@@ -4,6 +4,7 @@ import { Input } from './ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Badge } from './ui/Badge'
 import HelpModal from './HelpModal'
+import PipecatVoiceChat from './voice/PipecatVoiceChat'
 import { Send, Bot, User, Loader2, Sparkles, MessageCircle, Trash2, Copy, HelpCircle, Mic, MicOff, Zap, Database, BarChart3 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../services/api'
@@ -596,7 +597,27 @@ export default function ChatInterface() {
       </div>
       
       {/* Enhanced Input Area with Voice */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 space-y-4">
+        {/* Pipecat Voice AI Component */}
+        <PipecatVoiceChat
+          onTranscript={(text, isFinal) => {
+            if (isFinal) {
+              // When we get final transcript, set it as input and optionally send
+              setInput(text)
+            }
+          }}
+          onBotResponse={(text) => {
+            // Add bot response to chat
+            const botMessage: Message = {
+              id: `bot-${Date.now()}`,
+              content: text,
+              sender: 'bot',
+              timestamp: new Date()
+            }
+            setMessages(prev => [...prev, botMessage])
+          }}
+        />
+
         <div className="flex gap-3 items-end">
           <div className="flex-1">
             <Input
@@ -610,37 +631,6 @@ export default function ChatInterface() {
             />
           </div>
 
-          {/* Simple Voice Button */}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              onClick={toggleSimpleVoice}
-              disabled={isLoading || isAdvancedVoice}
-              className={`h-12 w-12 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                isListening && !isAdvancedVoice
-                  ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-              }`}
-              title="Simple Voice Recognition"
-            >
-              {isListening && !isAdvancedVoice ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </Button>
-          </motion.div>
-
-          {/* Advanced Voice Button (Pipecat) */}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              onClick={toggleAdvancedVoice}
-              disabled={isLoading}
-              className={`h-12 w-12 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                isAdvancedVoice
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
-                  : 'bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
-              }`}
-              title="Advanced Voice AI (Pipecat Pipeline)"
-            >
-              <Zap className="h-5 w-5" />
-            </Button>
-          </motion.div>
 
           {/* Send Button */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
