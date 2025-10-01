@@ -50,7 +50,8 @@ class FloatChatAgent:
     def __init__(
         self,
         mcp_server_url: str = "http://localhost:8000",
-        model_name: str = "moonshotai/kimi-k2-instruct-0905",
+        # model_name: str = "moonshotai/kimi-k2-instruct-0905",
+        model_name: str = os.getenv("GROQ_MODEL_NAME"),
         api_key: Optional[str] = os.getenv("GROQ_API_KEY") 
     ):
         """
@@ -256,10 +257,10 @@ class FloatChatAgent:
                 lat_margin = 2.0  # degrees
                 lon_margin = 2.0  # degrees
                 params.update({
-                    "lat_min": coords["latitude"] - lat_margin,
-                    "lat_max": coords["latitude"] + lat_margin,
-                    "lon_min": coords["longitude"] - lon_margin,
-                    "lon_max": coords["longitude"] + lon_margin
+                    "min_lat": coords["latitude"] - lat_margin,
+                    "max_lat": coords["latitude"] + lat_margin,
+                    "min_lon": coords["longitude"] - lon_margin,
+                    "max_lon": coords["longitude"] + lon_margin
                 })
             else:
                 # Use default or conversation context
@@ -267,21 +268,21 @@ class FloatChatAgent:
 
                 # Define ocean regions with their bounding boxes
                 ocean_regions = {
-                    "mediterranean": {"lat_min": 30, "lat_max": 46, "lon_min": -6, "lon_max": 37},
-                    "north_atlantic": {"lat_min": 20, "lat_max": 60, "lon_min": -80, "lon_max": 0},
-                    "south_atlantic": {"lat_min": -60, "lat_max": 0, "lon_min": -70, "lon_max": 20},
-                    "north_pacific": {"lat_min": 20, "lat_max": 60, "lon_min": 120, "lon_max": -120},
-                    "south_pacific": {"lat_min": -60, "lat_max": 0, "lon_min": 150, "lon_max": -70},
-                    "indian": {"lat_min": -60, "lat_max": 30, "lon_min": 20, "lon_max": 120},
-                    "arctic": {"lat_min": 66, "lat_max": 90, "lon_min": -180, "lon_max": 180},
-                    "southern": {"lat_min": -90, "lat_max": -60, "lon_min": -180, "lon_max": 180},
-                    "equatorial": {"lat_min": -5, "lat_max": 5, "lon_min": -180, "lon_max": 180},
-                    "tropical": {"lat_min": -23.5, "lat_max": 23.5, "lon_min": -180, "lon_max": 180},
-                    "caribbean": {"lat_min": 10, "lat_max": 27, "lon_min": -90, "lon_max": -60},
-                    "gulf_mexico": {"lat_min": 18, "lat_max": 31, "lon_min": -98, "lon_max": -80},
-                    "red_sea": {"lat_min": 12, "lat_max": 30, "lon_min": 32, "lon_max": 44},
-                    "baltic": {"lat_min": 53, "lat_max": 66, "lon_min": 10, "lon_max": 30},
-                    "black_sea": {"lat_min": 40.5, "lat_max": 47, "lon_min": 27, "lon_max": 42}
+                    "mediterranean": {"min_lat": 30, "max_lat": 46, "min_lon": -6, "max_lon": 37},
+                    "north_atlantic": {"min_lat": 20, "max_lat": 60, "min_lon": -80, "max_lon": 0},
+                    "south_atlantic": {"min_lat": -60, "max_lat": 0, "min_lon": -70, "max_lon": 20},
+                    "north_pacific": {"min_lat": 20, "max_lat": 60, "min_lon": 120, "max_lon": -120},
+                    "south_pacific": {"min_lat": -60, "max_lat": 0, "min_lon": 150, "max_lon": -70},
+                    "indian": {"min_lat": -60, "max_lat": 30, "min_lon": 20, "max_lon": 120},
+                    "arctic": {"min_lat": 66, "max_lat": 90, "min_lon": -180, "max_lon": 180},
+                    "southern": {"min_lat": -90, "max_lat": -60, "min_lon": -180, "max_lon": 180},
+                    "equatorial": {"min_lat": -5, "max_lat": 5, "min_lon": -180, "max_lon": 180},
+                    "tropical": {"min_lat": -23.5, "max_lat": 23.5, "min_lon": -180, "max_lon": 180},
+                    "caribbean": {"min_lat": 10, "max_lat": 27, "min_lon": -90, "max_lon": -60},
+                    "gulf_mexico": {"min_lat": 18, "max_lat": 31, "min_lon": -98, "max_lon": -80},
+                    "red_sea": {"min_lat": 12, "max_lat": 30, "min_lon": 32, "max_lon": 44},
+                    "baltic": {"min_lat": 53, "max_lat": 66, "min_lon": 10, "max_lon": 30},
+                    "black_sea": {"min_lat": 40.5, "max_lat": 47, "min_lon": 27, "max_lon": 42}
                 }
 
                 # Check if the message contains any region keywords
@@ -301,12 +302,19 @@ class FloatChatAgent:
                     params.update(ocean_regions[final_region])
                 else:
                     # Default global search with reasonable limits
-                    params.update({"lat_min": -90, "lat_max": 90, "lon_min": -180, "lon_max": 180})
+                    params.update({"min_lat": -90, "max_lat": 90, "min_lon": -180, "max_lon": 180})
 
             # Add temporal constraints
             temporal = query_interpretation.get("temporal_context", {})
             if temporal.get("relative_time") == "recent":
                 params["days_back"] = 30
+            else:
+                # Add default time range to satisfy safety validation (max 730 days)
+                from datetime import datetime, timedelta
+                end_time = datetime.utcnow()
+                start_time = end_time - timedelta(days=700)  # Stay under 730 day limit
+                params["time_start"] = start_time.isoformat()
+                params["time_end"] = end_time.isoformat()
 
             # Limit results
             params["max_results"] = conversation_context.get("user_preferences", {}).get("max_results_per_query", 100)

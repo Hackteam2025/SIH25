@@ -82,6 +82,33 @@ class VariableStatsQuery(BaseModel):
     variable: str = Field(..., description="Variable name (e.g., TEMP, PSAL)")
 
 
+# Request Models for Tool Endpoints (JSON body support)
+class ListProfilesRequest(BaseModel):
+    """Request model for list_profiles endpoint"""
+    min_lat: float = Field(..., ge=-90, le=90, description="Minimum latitude")
+    max_lat: float = Field(..., ge=-90, le=90, description="Maximum latitude")
+    min_lon: float = Field(..., ge=-180, le=180, description="Minimum longitude")
+    max_lon: float = Field(..., ge=-180, le=180, description="Maximum longitude")
+    time_start: Optional[datetime] = Field(None, description="Start of time range")
+    time_end: Optional[datetime] = Field(None, description="End of time range")
+    has_bgc: bool = Field(default=False, description="Filter for BGC sensors")
+    max_results: int = Field(default=100, le=1000, description="Maximum results")
+
+
+class SearchFloatsNearRequest(BaseModel):
+    """Request model for search_floats_near endpoint"""
+    lon: float = Field(..., ge=-180, le=180, description="Longitude")
+    lat: float = Field(..., ge=-90, le=90, description="Latitude")
+    radius_km: float = Field(..., gt=0, le=1000, description="Search radius in kilometers")
+    max_results: int = Field(default=50, le=500, description="Maximum results")
+
+
+class SemanticSearchRequest(BaseModel):
+    """Request model for semantic_search endpoint"""
+    query: str = Field(..., min_length=1, description="Search query")
+    limit: int = Field(default=10, ge=1, le=100, description="Maximum results")
+
+
 # Output Models
 class FloatSummary(BaseModel):
     """Summary information about a float"""

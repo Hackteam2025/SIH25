@@ -191,20 +191,33 @@ class MCPToolClient:
 
     async def _call_list_profiles(self, parameters: Dict[str, Any]) -> ToolResponse:
         """Call the list_profiles endpoint."""
-        # Map parameter names from agent format to API format
+        # Map parameter names - support both formats (lat_min/min_lat)
         mapped_params = {}
+
+        # Handle both naming conventions
         if 'lat_min' in parameters:
             mapped_params['min_lat'] = parameters['lat_min']
+        elif 'min_lat' in parameters:
+            mapped_params['min_lat'] = parameters['min_lat']
+
         if 'lat_max' in parameters:
             mapped_params['max_lat'] = parameters['lat_max']
+        elif 'max_lat' in parameters:
+            mapped_params['max_lat'] = parameters['max_lat']
+
         if 'lon_min' in parameters:
             mapped_params['min_lon'] = parameters['lon_min']
+        elif 'min_lon' in parameters:
+            mapped_params['min_lon'] = parameters['min_lon']
+
         if 'lon_max' in parameters:
             mapped_params['max_lon'] = parameters['lon_max']
+        elif 'max_lon' in parameters:
+            mapped_params['max_lon'] = parameters['max_lon']
 
         # Copy other parameters as-is
         for key, value in parameters.items():
-            if key not in ['lat_min', 'lat_max', 'lon_min', 'lon_max']:
+            if key not in ['lat_min', 'lat_max', 'lon_min', 'lon_max', 'min_lat', 'max_lat', 'min_lon', 'max_lon']:
                 mapped_params[key] = value
 
         response = await self.client.post(
