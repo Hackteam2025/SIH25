@@ -1,0 +1,57 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgis/postgis:15-3.4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-floatchat}
+      POSTGRES_USER: ${POSTGRES_USER:-floatchat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-floatchat}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - ./backend/app:/app/app
+      - ./data:/app/data
+      - ./vectorstore:/app/vectorstore
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  web:
+    build: ./frontend/web
+    env_file: .env
+    volumes:
+      - ./frontend/web:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: ["npm", "run", "dev", "--", "--host"]
+    depends_on:
+      - backend
+
+  streamlit:
+    build: ./frontend/streamlit
+    env_file: .env
+    volumes:
+      - ./frontend/streamlit:/app
+      - ./data:/app/data
+      - ./vectorstore:/app/vectorstore
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

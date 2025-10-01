@@ -1,0 +1,17 @@
+2025-09-27T17:35:30.183638+0530 | INFO | __main__:280 | Starting Pipecat Oceanographic Voice AI Pipeline
+2025-09-27T17:35:30.183804+0530 | INFO | __main__:134 | Using Daily transport for WebRTC connection
+2025-09-27T17:35:30.183890+0530 | WARNING | __main__:137 | Daily transport configuration needed - using local transport
+2025-09-27T17:35:30.183958+0530 | INFO | __main__:141 | Using local microphone and speakers
+2025-09-27T17:35:30.341039+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_started_speaking not registered
+2025-09-27T17:35:30.341270+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_stopped_speaking not registered
+2025-09-27T17:35:30.341353+0530 | INFO | __main__:168 | Using Soniox STT service
+2025-09-27T17:35:30.341527+0530 | INFO | __main__:185 | Using Groq LLM for fast inference
+2025-09-27T17:35:30.459286+0530 | INFO | __main__:211 | Using Sarvam TTS with natural voice
+2025-09-27T17:35:30.486224+0530 | WARNING | __main__:242 | Could not connect to ARGO MCP server: unhandled errors in a TaskGroup (1 sub-exception)
+2025-09-27T17:35:32.332160+0530 | WARNING | __main__:265 | Could not connect to Supabase MCP server: unhandled errors in a TaskGroup (1 sub-exception)
+2025-09-27T17:35:32.332467+0530 | INFO | __main__:291 | Session started: 1ffff9b8-7008-404f-b97c-39a3834bb711
+2025-09-27T17:35:32.333204+0530 | INFO | __main__:332 | Pipecat oceanographic pipeline created successfully
+2025-09-27T17:35:32.333492+0530 | INFO | __main__:346 | Starting voice AI conversation...
+2025-09-27T17:35:34.312066+0530 | WARNING | pipecat.pipeline.runner:124 | Interruption detected. Cancelling runner PipelineRunner#0
+2025-09-27T17:35:36.189163+0530 | INFO | __main__:356 | Cleaning up Pipecat voice AI session
+2025-09-27T17:35:36.189465+0530 | INFO | __main__:367 | Pipecat voice AI session completed

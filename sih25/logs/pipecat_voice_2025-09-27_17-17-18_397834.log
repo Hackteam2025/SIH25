@@ -1,0 +1,16 @@
+2025-09-27T17:17:18.402060+0530 | INFO | __main__:281 | Starting Pipecat Oceanographic Voice AI Pipeline
+2025-09-27T17:17:18.402237+0530 | INFO | __main__:131 | Using Daily transport for WebRTC connection
+2025-09-27T17:17:18.402287+0530 | WARNING | __main__:134 | Daily transport configuration needed - using local transport
+2025-09-27T17:17:18.402332+0530 | INFO | __main__:138 | Using local microphone and speakers
+2025-09-27T17:17:18.573575+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_started_speaking not registered
+2025-09-27T17:17:18.573796+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_stopped_speaking not registered
+2025-09-27T17:17:18.573878+0530 | INFO | __main__:165 | Using Soniox STT service
+2025-09-27T17:17:18.574037+0530 | INFO | __main__:182 | Using Groq LLM for fast inference
+2025-09-27T17:17:18.675841+0530 | INFO | __main__:208 | Using Sarvam TTS with natural voice
+2025-09-27T17:17:18.827453+0530 | WARNING | __main__:241 | Could not connect to ARGO MCP server: 'ToolsSchema' object has no attribute 'tools'
+2025-09-27T17:17:25.441798+0530 | WARNING | __main__:265 | Could not connect to Supabase MCP server: 'ToolsSchema' object has no attribute 'tools'
+2025-09-27T17:17:25.441999+0530 | ERROR | __main__:354 | Error in Pipecat voice AI pipeline: 'GroqLLMService' object has no attribute 'add_mcp_service'
+2025-09-27T17:17:25.442057+0530 | INFO | __main__:358 | Cleaning up Pipecat voice AI session
+2025-09-27T17:17:25.442102+0530 | WARNING | __main__:366 | Error closing MCP service: 'list' object has no attribute 'close'
+2025-09-27T17:17:25.442141+0530 | WARNING | __main__:366 | Error closing MCP service: 'list' object has no attribute 'close'
+2025-09-27T17:17:25.442175+0530 | INFO | __main__:373 | Pipecat voice AI session completed

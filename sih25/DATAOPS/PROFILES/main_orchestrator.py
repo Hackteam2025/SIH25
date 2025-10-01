@@ -12,10 +12,10 @@ from prefect import flow, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 
 # Import our modular tasks
-from .step3_schema_explorer import explore_argo_schema
-from .step4_data_validator import validate_argo_data
-from .step5_data_preprocessor import preprocess_argo_data
-from .step6_data_exporter_parquet import export_to_parquet
+from step3_schema_explorer import explore_argo_schema
+from step4_data_validator import validate_argo_data
+from step5_data_preprocessor import preprocess_argo_data
+from step6_data_exporter_parquet import export_to_parquet
 
 # Import DATA LOADER
 try:

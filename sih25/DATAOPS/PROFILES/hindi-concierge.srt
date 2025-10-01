@@ -1,0 +1,123 @@
+1
+00:00:00,747 --> 00:00:03,157
+Agent: Hello. Welcome to our hotel room service.
+
+2
+00:00:03,157 --> 00:00:06,127
+Agent: Could you please provide your room number so I can assist you better?
+
+3
+00:00:07,329 --> 00:00:09,879
+User: Yes, my room number is 9.
+
+4
+00:00:10,657 --> 00:00:13,457
+Agent: Alright. Your room number 9 has been noted.
+
+5
+00:00:13,457 --> 00:00:16,917
+Agent: Would you like to order something to eat, or do you need anything else?
+
+6
+00:00:17,669 --> 00:00:21,819
+User: Yes, I wanted to know what you have listed in your beverages section.
+
+7
+00:00:22,547 --> 00:00:24,847
+Agent: In our beverages section, we have the following options.
+
+8
+00:00:24,847 --> 00:00:29,217
+Agent: 1: Sparkling Water at 3 US dollars... cold carbonated water with a slice of lime.
+
+9
+00:00:29,217 --> 00:00:32,687
+Agent: 2: Classic Lemonade at 4 US dollars... fresh lemon juice, perfectly sweetened.
+
+10
+00:00:32,687 --> 00:00:36,727
+Agent: 3: Iced Mocha at 5 dollars and 50 cents... espresso, chocolate syrup, and cold milk...
+
+11
+00:00:36,799 --> 00:00:39,349
+User: Okay, add 1 sparkling water for me.
+
+12
+00:00:39,349 --> 00:00:41,249
+User: And, I want to order a pizza.
+
+13
+00:00:41,587 --> 00:00:43,197
+Agent: In our pizza menu, we have the following options.
+
+14
+00:00:43,197 --> 00:00:47,497
+Agent: 1: Pepperoni at 14 US dollars... non-veg, with spicy pepperoni and mozzarella cheese.
+
+15
+00:00:47,497 --> 00:00:51,577
+Agent: 2: Margherita at 12 dollars and 50 cents... veg, fresh mozzarella, tomato sauce, and basil on a thin crust.
+
+16
+00:00:51,977 --> 00:00:53,497
+User: Okay, that's great.
+
+17
+00:00:53,929 --> 00:00:56,349
+User: I'd like to have the Margherita pizza added...
+
+18
+00:00:56,349 --> 00:00:58,549
+User: ...in a quantity of 2.
+
+19
+01:00,437 --> 01:03,677
+Agent: Okay. I have added 2 Margherita pizzas...
+
+20
+01:03,677 --> 01:05,877
+Agent: ...and 1 Sparkling Water to your order.
+
+21
+01:06,377 --> 01:08,247
+Agent: Would you like to add anything else?
+
+22
+01:08,799 --> 01:10,039
+User: No, thanks.
+
+23
+01:10,877 --> 01:12,177
+Agent: Great news.
+
+24
+01:12,657 --> 01:15,317
+Agent: Your order has been successfully placed for room 9.
+
+25
+01:15,737 --> 01:19,277
+Agent: You can expect your delicious food to arrive in about 25 to 30 minutes.
+
+26
+01:19,277 --> 01:21,377
+Agent: Is there anything else I can help you with today?
+
+27
+01:21,959 --> 01:23,949
+User: Thank you very much.
+
+28
+01:24,729 --> 01:25,749
+User: Thank you.
+
+29
+01:26,357 --> 01:28,437
+Agent: You are very welcome.
+
+30
+01:28,437 --> 01:30,137
+Agent: Your order is already on its way to your room.
+
+31
+01:30,137 --> 01:31,437
+Agent: Have a wonderful day.

@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FloatChat – AI ARGO Ocean Data Platform</title>
+    <meta name="description" content="FloatChat is an AI-powered ARGO float ocean data platform for exploring profiles, visualizing maps and globes, and analyzing temperature, salinity and depth statistics." />
+    <meta name="keywords" content="ARGO, ocean data, floats, temperature, salinity, depth, map, globe, analytics, AI" />
+    <link rel="canonical" href="http://localhost:5173/" />
+    <meta name="theme-color" content="#0b141d" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FloatChat – AI ARGO Ocean Data Platform" />
+    <meta property="og:description" content="Explore ARGO float profiles on an interactive map and 3D globe with AI-assisted analysis." />
+    <meta property="og:url" content="http://localhost:5173/" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FloatChat – AI ARGO Ocean Data Platform" />
+    <meta name="twitter:description" content="Explore ARGO float profiles on an interactive map and 3D globe with AI-assisted analysis." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- JSON-LD Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "FloatChat",
+      "applicationCategory": "DataVisualizationApplication",
+      "description": "AI-powered ARGO float ocean data platform with maps, 3D globe, analytics and exports.",
+      "operatingSystem": "Web",
+      "url": "http://localhost:5173/"
+    }
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

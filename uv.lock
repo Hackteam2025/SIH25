@@ -1081,6 +1081,17 @@ wheels = [
 ]
 
 [[package]]
+name = "daily-python"
+version = "0.19.9"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/85/6064c3225e5b190e522e8f3bc6a460efc5e3e6632f16fd5f9799c44ba57a/daily_python-0.19.9-cp37-abi3-macosx_10_15_x86_64.whl", hash = "sha256:cbc558ad7d49e79b550bf7567b9ceae75e2864d4fcaf41c90377b620e38a2461", size = 13365213, upload-time = "2025-09-06T00:31:00.224Z" },
+    { url = "https://files.pythonhosted.org/packages/23/58/af986c6881180a46a7b60dd418ce58d6d7c0c4ffc48d261748067c679317/daily_python-0.19.9-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:446bb9ee848d88bc68ca29a2216793c9b5ebaf5991bf604daf76f7c5a53d5919", size = 11711673, upload-time = "2025-09-06T00:31:02.526Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/48/1cad4c3e92cdb5ef06467d972c76a510fe5e807513334b10ad7f8c21bf74/daily_python-0.19.9-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:2facaf82b614404c642c70bbf0874fb045d8ad46400acb051470cd4df93cb4db", size = 13679393, upload-time = "2025-09-06T00:31:04.999Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/e9/354f4699619e83d13e266256b2352b21741ac527e3e5ab5f2264d5c482cd/daily_python-0.19.9-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:ffc205efca7b47739efd358febab17577248c8db2ebc4d17d819307a83b9eefc", size = 14221932, upload-time = "2025-09-06T00:31:07.471Z" },
+]
+
+[[package]]
 name = "dash"
 version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3629,6 +3640,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+daily = [
+    { name = "daily-python" },
+]
 deepgram = [
     { name = "deepgram-sdk" },
 ]
@@ -5538,7 +5552,7 @@ dependencies = [
     { name = "numpy" },
     { name = "openai" },
     { name = "pandas" },
-    { name = "pipecat-ai", extra = ["deepgram", "openai"] },
+    { name = "pipecat-ai", extra = ["daily", "deepgram", "openai"] },
     { name = "plotly" },
     { name = "prefect" },
     { name = "psycopg2-binary" },
@@ -5587,7 +5601,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "openai", specifier = ">=1.3.0" },
     { name = "pandas", specifier = ">=2.0.0" },
-    { name = "pipecat-ai", extras = ["openai", "deepgram"], specifier = ">=0.0.30" },
+    { name = "pipecat-ai", extras = ["daily", "deepgram", "openai"], specifier = ">=0.0.30" },
     { name = "plotly", specifier = ">=5.17.0" },
     { name = "prefect", specifier = ">=2.18.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.0" },

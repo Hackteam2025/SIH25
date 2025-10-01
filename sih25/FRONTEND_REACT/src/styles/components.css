@@ -1,0 +1,370 @@
+/* Ocean Component Styles */
+
+/* Floating Card Component */
+.floating-card {
+  @apply glass-surface rounded-wave;
+  position: relative;
+  overflow: hidden;
+}
+
+.floating-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+}
+
+/* Wave Background */
+.wave-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -10;
+  pointer-events: none;
+}
+
+/* Bubble Button */
+.bubble-button {
+  @apply glass-button rounded-bubble;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.bubble-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+}
+
+.bubble-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.bubble-button:active::after {
+  width: 120px;
+  height: 120px;
+  animation: ripple-out 0.6s ease-out;
+}
+
+/* Ocean Button Variants */
+.ocean-button-primary {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-surface));
+  color: white;
+  border: 1px solid rgba(0, 116, 217, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 116, 217, 0.3);
+}
+
+.ocean-button-primary:hover {
+  background: linear-gradient(135deg, var(--ocean-surface), var(--seafoam-green));
+  box-shadow: 0 6px 25px rgba(78, 205, 196, 0.4);
+}
+
+.ocean-button-secondary {
+  @apply glass-surface;
+  color: var(--ocean-blue);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ocean-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.ocean-button-coral {
+  background: linear-gradient(135deg, var(--coral-pink), var(--coral-orange));
+  color: white;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+}
+
+.ocean-button-seafoam {
+  background: linear-gradient(135deg, var(--seafoam-green), var(--bubble-white));
+  color: var(--ocean-deep);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  box-shadow: 0 4px 20px rgba(78, 205, 196, 0.3);
+}
+
+/* Input Components */
+.ocean-input {
+  @apply glass-input rounded-current;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--ocean-blue);
+  transition: all 0.3s ease;
+}
+
+.ocean-input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--seafoam-green);
+  box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+  outline: none;
+}
+
+.ocean-input::placeholder {
+  color: rgba(0, 61, 122, 0.5);
+}
+
+/* Modal Components */
+.ocean-modal {
+  @apply glass-modal rounded-wave;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 90vh;
+  z-index: 50;
+}
+
+.ocean-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 8, 20, 0.7);
+  backdrop-filter: blur(10px);
+  z-index: 40;
+}
+
+/* Navigation Components */
+.ocean-nav {
+  @apply glass-nav;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+}
+
+.ocean-sidebar {
+  @apply glass-surface;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 320px;
+  z-index: 30;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.ocean-sidebar.open {
+  transform: translateX(0);
+}
+
+/* Chat Components */
+.chat-message-user {
+  background: linear-gradient(135deg, var(--coral-pink), var(--coral-orange));
+  color: white;
+  border-radius: var(--radius-wave);
+  margin-left: auto;
+  max-width: 80%;
+}
+
+.chat-message-assistant {
+  @apply glass-surface;
+  color: var(--ocean-blue);
+  border-radius: var(--radius-wave);
+  margin-right: auto;
+  max-width: 80%;
+}
+
+.chat-input-container {
+  @apply glass-surface rounded-wave;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+}
+
+/* Visualization Components */
+.chart-container {
+  @apply glass-surface rounded-wave;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-tooltip {
+  @apply glass-moderate rounded-current;
+  padding: 12px;
+  color: var(--ocean-blue);
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Globe Components */
+.globe-container {
+  @apply glass-surface rounded-wave;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--abyss-black), var(--midnight-blue));
+}
+
+.globe-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+/* Voice Interface Components */
+.voice-button {
+  @apply bubble-button;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-button.active {
+  background: linear-gradient(135deg, var(--coral-pink), var(--coral-orange));
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.6);
+}
+
+.voice-panel {
+  @apply glass-surface rounded-wave;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 16px;
+  width: 320px;
+  z-index: 50;
+}
+
+/* Status Indicators */
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-indicator.active {
+  background: var(--seafoam-green);
+  box-shadow: 0 0 10px var(--seafoam-green);
+}
+
+.status-indicator.processing {
+  background: var(--coral-orange);
+  animation: ocean-pulse 1.5s ease-in-out infinite;
+}
+
+.status-indicator.error {
+  background: var(--coral-pink);
+  animation: coral-glow 1s ease-in-out infinite;
+}
+
+/* Loading States */
+.ocean-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(78, 205, 196, 0.2);
+  border-top: 3px solid var(--seafoam-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility Components */
+.ocean-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  margin: 20px 0;
+}
+
+.ocean-badge {
+  @apply glass-surface rounded-wave;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--ocean-blue);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ocean-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-bubble);
+  background: linear-gradient(135deg, var(--ocean-surface), var(--seafoam-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .ocean-sidebar {
+    width: 280px;
+  }
+
+  .chat-input-container {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .voice-panel {
+    width: 280px;
+  }
+
+  .ocean-modal {
+    margin: 20px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-message-user,
+  .chat-message-assistant {
+    max-width: 90%;
+  }
+
+  .ocean-sidebar {
+    width: 100vw;
+  }
+
+  .voice-panel {
+    width: calc(100vw - 40px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}

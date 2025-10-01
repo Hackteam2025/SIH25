@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "floatchat": {
+      "command": "python3",
+      "args": [
+        "/Users/prada/Desktop/coding/FloatChat_SIH/FloatChat_SIH/backend/mcp_server.py"
+      ],
+      "description": "FloatChat ARGO oceanographic data MCP server",
+      "capabilities": {
+        "tools": true,
+        "resources": true,
+        "prompts": true
+      },
+      "env": {
+        "PYTHONPATH": "/Users/prada/Desktop/coding/FloatChat_SIH/FloatChat_SIH/backend:/Users/prada/Desktop/coding/FloatChat_SIH/FloatChat_SIH/backend/app"
+      }
+    }
+  }
+}

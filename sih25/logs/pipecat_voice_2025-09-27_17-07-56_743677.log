@@ -1,0 +1,10 @@
+2025-09-27T17:07:56.747945+0530 | INFO | __main__:275 | Starting Pipecat Oceanographic Voice AI Pipeline
+2025-09-27T17:07:56.748107+0530 | INFO | __main__:132 | Using local microphone and speakers
+2025-09-27T17:07:56.748177+0530 | DEBUG | pipecat.audio.vad.silero:147 | Loading Silero VAD model...
+2025-09-27T17:07:56.853051+0530 | DEBUG | pipecat.audio.vad.silero:169 | Loaded Silero VAD
+2025-09-27T17:07:56.933120+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_started_speaking not registered
+2025-09-27T17:07:56.933352+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_stopped_speaking not registered
+2025-09-27T17:07:56.933444+0530 | INFO | __main__:167 | Using Deepgram STT service
+2025-09-27T17:07:56.934372+0530 | ERROR | __main__:348 | Error in Pipecat voice AI pipeline: No LLM API key configured. Set GROQ_API_KEY or OPENAI_API_KEY
+2025-09-27T17:07:56.934438+0530 | INFO | __main__:352 | Cleaning up Pipecat voice AI session
+2025-09-27T17:07:56.934477+0530 | INFO | __main__:367 | Pipecat voice AI session completed

@@ -1,0 +1,19 @@
+2025-09-27T17:35:50.815023+0530 | INFO | __main__:280 | Starting Pipecat Oceanographic Voice AI Pipeline
+2025-09-27T17:35:50.815198+0530 | INFO | __main__:134 | Using Daily transport for WebRTC connection
+2025-09-27T17:35:50.815295+0530 | WARNING | __main__:137 | Daily transport configuration needed - using local transport
+2025-09-27T17:35:50.815372+0530 | INFO | __main__:141 | Using local microphone and speakers
+2025-09-27T17:35:50.975080+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_started_speaking not registered
+2025-09-27T17:35:50.975284+0530 | WARNING | pipecat.utils.base_object:108 | Event handler bot_stopped_speaking not registered
+2025-09-27T17:35:50.975359+0530 | INFO | __main__:168 | Using Soniox STT service
+2025-09-27T17:35:50.975537+0530 | INFO | __main__:185 | Using Groq LLM for fast inference
+2025-09-27T17:35:51.078737+0530 | INFO | __main__:211 | Using Sarvam TTS with natural voice
+2025-09-27T17:35:51.227585+0530 | INFO | __main__:239 | Connected to ARGO MCP server at http://localhost:8000
+2025-09-27T17:35:53.217327+0530 | INFO | __main__:262 | Connected to Supabase MCP server
+2025-09-27T17:35:53.217501+0530 | INFO | __main__:291 | Session started: 8a2491a3-26b4-41b6-b707-08f837b934e0
+2025-09-27T17:35:53.218200+0530 | INFO | __main__:332 | Pipecat oceanographic pipeline created successfully
+2025-09-27T17:35:53.218503+0530 | INFO | __main__:346 | Starting voice AI conversation...
+2025-09-27T17:36:27.578829+0530 | WARNING | pipecat.pipeline.runner:124 | Interruption detected. Cancelling runner PipelineRunner#0
+2025-09-27T17:36:29.482089+0530 | INFO | __main__:356 | Cleaning up Pipecat voice AI session
+2025-09-27T17:36:29.482372+0530 | WARNING | __main__:364 | Error closing MCP client: 'MCPClient' object has no attribute 'close'
+2025-09-27T17:36:29.482560+0530 | WARNING | __main__:364 | Error closing MCP client: 'MCPClient' object has no attribute 'close'
+2025-09-27T17:36:29.482695+0530 | INFO | __main__:367 | Pipecat voice AI session completed

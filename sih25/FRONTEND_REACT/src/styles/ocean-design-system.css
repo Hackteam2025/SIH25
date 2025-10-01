@@ -1,0 +1,197 @@
+/* Ocean Color Palette */
+:root {
+  /* Primary Ocean Colors */
+  --ocean-deep: #001F3F;
+  --ocean-blue: #003D7A;
+  --ocean-surface: #0074D9;
+  --ocean-foam: #4ECDC4;
+
+  /* Coral Accents */
+  --coral-pink: #FF6B6B;
+  --coral-orange: #FF8C69;
+
+  /* Seafoam & Bubbles */
+  --seafoam-green: #4ECDC4;
+  --bubble-white: #F0F8FF;
+  --pearl-white: #FFF8DC;
+
+  /* Depths & Shadows */
+  --abyss-black: #000814;
+  --midnight-blue: #001D3D;
+  --shadow-blue: rgba(0, 31, 63, 0.8);
+
+  /* Glassmorphic Effects */
+  --glass-surface: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: rgba(0, 31, 63, 0.25);
+
+  /* Typography */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Inter', sans-serif;
+
+  /* Spacing (Ocean Depths) */
+  --depth-1: 4px;   /* Surface ripples */
+  --depth-2: 8px;   /* Shallow waves */
+  --depth-3: 16px;  /* Mid-water */
+  --depth-4: 32px;  /* Deep current */
+  --depth-5: 64px;  /* Abyssal */
+
+  /* Border Radius (Organic shapes) */
+  --radius-bubble: 50%;
+  --radius-wave: 24px;
+  --radius-current: 16px;
+  --radius-drop: 8px;
+}
+
+/* Glassmorphic Base Classes */
+.glass-surface {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 8px 32px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-intense {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Wave Animation Base */
+@keyframes wave-flow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  50% { transform: translateY(-5px) rotate(0deg); }
+  75% { transform: translateY(-15px) rotate(-1deg); }
+}
+
+@keyframes bubble-float {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes depth-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(78, 205, 196, 0.6);
+  }
+}
+
+/* Ocean Typography */
+.ocean-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    var(--ocean-surface) 0%,
+    var(--seafoam-green) 50%,
+    var(--coral-pink) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ocean-body {
+  font-family: var(--font-primary);
+  color: var(--ocean-blue);
+  line-height: 1.6;
+}
+
+/* Utility Classes */
+.wave-animation {
+  animation: wave-flow 6s ease-in-out infinite;
+}
+
+.bubble-animation {
+  animation: bubble-float 8s linear infinite;
+}
+
+.depth-glow {
+  animation: depth-glow 3s ease-in-out infinite;
+}
+
+/* Ocean Gradients */
+.gradient-ocean-sunset {
+  background: linear-gradient(
+    135deg,
+    var(--ocean-deep) 0%,
+    var(--ocean-blue) 40%,
+    var(--coral-orange) 70%,
+    var(--coral-pink) 100%
+  );
+}
+
+.gradient-deep-sea {
+  background: linear-gradient(
+    180deg,
+    var(--ocean-surface) 0%,
+    var(--ocean-blue) 50%,
+    var(--abyss-black) 100%
+  );
+}
+
+.gradient-seafoam {
+  background: linear-gradient(
+    45deg,
+    var(--seafoam-green) 0%,
+    var(--bubble-white) 100%
+  );
+}
+
+/* Tailwind Custom Classes */
+.rounded-wave {
+  border-radius: var(--radius-wave);
+}
+
+.rounded-current {
+  border-radius: var(--radius-current);
+}
+
+.rounded-bubble {
+  border-radius: var(--radius-bubble);
+}
+
+.rounded-drop {
+  border-radius: var(--radius-drop);
+}
+
+/* Ocean Themed Colors for Tailwind */
+.text-ocean-deep { color: var(--ocean-deep); }
+.text-ocean-blue { color: var(--ocean-blue); }
+.text-ocean-surface { color: var(--ocean-surface); }
+.text-seafoam-green { color: var(--seafoam-green); }
+.text-coral-pink { color: var(--coral-pink); }
+.text-coral-orange { color: var(--coral-orange); }
+
+.bg-ocean-deep { background-color: var(--ocean-deep); }
+.bg-ocean-blue { background-color: var(--ocean-blue); }
+.bg-ocean-surface { background-color: var(--ocean-surface); }
+.bg-seafoam-green { background-color: var(--seafoam-green); }
+.bg-coral-pink { background-color: var(--coral-pink); }
+.bg-coral-orange { background-color: var(--coral-orange); }
+
+.border-ocean-deep { border-color: var(--ocean-deep); }
+.border-ocean-blue { border-color: var(--ocean-blue); }
+.border-ocean-surface { border-color: var(--ocean-surface); }
+.border-seafoam-green { border-color: var(--seafoam-green); }
+.border-coral-pink { border-color: var(--coral-pink); }
+.border-coral-orange { border-color: var(--coral-orange); }

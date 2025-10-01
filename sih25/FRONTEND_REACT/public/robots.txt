@@ -1,0 +1,10 @@
+# robots.txt for FloatChat
+# Update Host and Sitemap to your deployed domain when hosting in production.
+User-agent: *
+Allow: /
+
+# Disallow internal dev routes (if any)
+Disallow: /__vite/
+
+Sitemap: http://localhost:5173/sitemap.xml
+Host: http://localhost:5173/

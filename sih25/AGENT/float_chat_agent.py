@@ -16,9 +16,9 @@ from agno.agent import Agent
 from agno.models.groq import Groq
 from pydantic import BaseModel
 
-from .mcp_client import MCPToolClient
-from .conversation_memory import ConversationMemory
-from .scientific_context import ScientificContext
+from sih25.AGENT.mcp_client import MCPToolClient
+from sih25.AGENT.conversation_memory import ConversationMemory
+from sih25.AGENT.scientific_context import ScientificContext
 
 logger = logging.getLogger(__name__)
 

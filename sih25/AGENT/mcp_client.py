@@ -215,9 +215,17 @@ class MCPToolClient:
         if response.status_code == 200:
             return ToolResponse.model_validate(response.json())
         else:
+            error_details = response.text
+            try:
+                if response.headers.get('content-type', '').startswith('application/json'):
+                    error_details = response.json()
+                    self.logger.warning(f"Tool list_profiles returned {response.status_code}: {error_details}")
+            except:
+                self.logger.warning(f"Tool list_profiles returned {response.status_code}: {response.text}")
+
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {error_details}"}],
                 execution_time_ms=0
             )
 
@@ -279,9 +287,17 @@ class MCPToolClient:
         if response.status_code == 200:
             return ToolResponse.model_validate(response.json())
         else:
+            error_details = response.text
+            try:
+                if response.headers.get('content-type', '').startswith('application/json'):
+                    error_details = response.json()
+                    self.logger.warning(f"Tool semantic_search returned {response.status_code}: {error_details}")
+            except:
+                self.logger.warning(f"Tool semantic_search returned {response.status_code}: {response.text}")
+
             return ToolResponse(
                 success=False,
-                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {response.text}", "details": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text}],
+                errors=[{"error": "api_error", "message": f"HTTP {response.status_code}: {error_details}"}],
                 execution_time_ms=0
             )
 

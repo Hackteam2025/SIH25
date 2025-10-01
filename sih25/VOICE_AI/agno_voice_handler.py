@@ -21,7 +21,7 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root / "AGENT"))
 
-from float_chat_agent import FloatChatAgent
+from sih25.AGENT.float_chat_agent import FloatChatAgent
 
 
 class AGNOVoiceHandler:
@@ -93,19 +93,6 @@ class AGNOVoiceHandler:
             logger.info(f"Generated response: {len(result)} chars")
             logger.info(f"AGNO response: {result}")
 
-            # Log the assistant response to CSV if session logger available
-            if self.session_logger:
-                self.session_logger.log_message(
-                    role="assistant",
-                    content=result,
-                    session_id=self.session_id,
-                    room_number=None,  # Not applicable for oceanographic queries
-                    confidence_score=None,
-                    processing_time_ms=processing_time
-                )
-                logger.debug(f"[CSV] assistant: {result}")
-
-            return result
 
         except Exception as e:
             # Track voice processing errors

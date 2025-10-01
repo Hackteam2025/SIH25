@@ -39,13 +39,11 @@ env/
 .DS_Store
 Thumbs.db
 
-# Test outputs and data files
-test_output/
-*.parquet
-*.log
-*.nc
-data
 
 # Temporary files
 *.tmp
 *.temp
+
+node_modules/
+dist/
+build/
