@@ -13,12 +13,8 @@ import asyncio
 from pathlib import Path
 import base64
 
-# Adjusting path to import from sibling directory PROFILES
-import sys
-# Add the parent directory to the path to allow imports from sibling packages
-sys.path.append(str(Path(__file__).parent.parent))
-
-from DATAOPS.PROFILES.main_orchestrator import argo_batch_pipeline
+# Fixed import path to use proper package structure
+from sih25.DATAOPS.PROFILES.main_orchestrator import argo_batch_pipeline
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

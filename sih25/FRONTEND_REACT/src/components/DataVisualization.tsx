@@ -69,15 +69,15 @@ function DataVisualization() {
   })
 
   const fetchProfiles = async () => {
-    console.log('🔄 Starting to fetch profiles directly from Supabase...')
+    console.log('🔄 Starting to fetch profiles via unified API...')
     try {
       const startTime = performance.now()
 
-      // Use direct Supabase API - fetch up to 500 observations
-      const profilesData = await api.supabase.getProfiles(500)
+      // ✅ Use unified API - tries backend first, falls back to Supabase
+      const profilesData = await api.getProfiles(500)
       const endTime = performance.now()
 
-      console.log(`✅ Fetched ${profilesData.length} profiles from Supabase in ${(endTime - startTime).toFixed(2)}ms`)
+      console.log(`✅ Fetched ${profilesData.length} profiles in ${(endTime - startTime).toFixed(2)}ms`)
 
       setProfiles(profilesData)
 

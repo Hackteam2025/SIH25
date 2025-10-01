@@ -421,10 +421,120 @@ export class RealtimeConnection {
   }
 }
 
+// ✅ UNIFIED API - Tries backend first, falls back to Supabase
+export const api = {
+  // Get profiles - tries MCP API first, falls back to Supabase
+  async getProfiles(limit: number = 500): Promise<ProfileData[]> {
+    try {
+      console.log('🔄 Attempting to fetch profiles from backend MCP API...');
+
+      // ✅ TRY BACKEND FIRST
+      const response = await apiClient.post('/tools/list_profiles', {
+        min_lat: -90,
+        max_lat: 90,
+        min_lon: -180,
+        max_lon: 180,
+        max_results: limit
+      }, {
+        timeout: 5000 // 5 second timeout for backend
+      });
+
+      if (response.data.success && response.data.data) {
+        const backendProfiles = response.data.data;
+        console.log(`✅ Fetched ${backendProfiles.length} profiles from backend`);
+
+        // Transform backend response to ProfileData format
+        return backendProfiles.map((p: any) => ({
+          profile_id: p.profile_id,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          depth: p.depth || 0,
+          temperature: p.avg_temperature || p.temperature || 0,
+          salinity: p.avg_salinity || p.salinity || 0,
+          pressure: p.avg_pressure || p.pressure || 0,
+          month: new Date(p.timestamp).getMonth() + 1,
+          year: new Date(p.timestamp).getFullYear(),
+          timestamp: p.timestamp
+        }));
+      }
+    } catch (backendError: any) {
+      console.warn('⚠️ Backend unavailable, falling back to Supabase:', backendError.message);
+    }
+
+    // FALLBACK TO SUPABASE
+    console.log('📊 Fetching from Supabase directly...');
+    return await supabaseApi.getProfiles(limit);
+  },
+
+  // Chat - route through AGNO agent
+  async sendMessage(message: string, sessionId?: string): Promise<{
+    response: string;
+    session_id: string;
+    suggestions?: string[];
+  }> {
+    try {
+      console.log('🤖 Sending message to AGNO agent...');
+
+      const response = await apiClient.post('/agent/chat', {
+        message: message,
+        session_id: sessionId || `session_${Date.now()}`,
+        context: { interface: 'react' }
+      }, {
+        baseURL: getEnvVar('VITE_AGENT_API_URL', 'http://localhost:8001'),
+        timeout: 30000
+      });
+
+      return {
+        response: response.data.response,
+        session_id: response.data.session_id,
+        suggestions: response.data.follow_up_suggestions || []
+      };
+    } catch (error) {
+      console.error('❌ Chat API error:', error);
+      // Fallback to simple response
+      return chatApi.sendMessage(message, sessionId);
+    }
+  },
+
+  // Search profiles by location
+  async searchProfiles(minLat: number, maxLat: number, minLon: number, maxLon: number, limit: number = 50): Promise<ProfileData[]> {
+    try {
+      const response = await apiClient.post('/tools/list_profiles', {
+        min_lat: minLat,
+        max_lat: maxLat,
+        min_lon: minLon,
+        max_lon: maxLon,
+        max_results: limit
+      });
+
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+    } catch (error) {
+      console.warn('Backend search failed, using Supabase');
+    }
+
+    return await supabaseApi.searchProfilesByLocation(minLat, maxLat, minLon, maxLon, limit);
+  },
+
+  // Health check for connection status
+  async checkBackendHealth(): Promise<boolean> {
+    try {
+      const response = await apiClient.get('/health', { timeout: 3000 });
+      return response.data.status === 'healthy';
+    } catch {
+      return false;
+    }
+  },
+
+  // Keep direct Supabase access for fallback
+  supabase: supabaseApi,
+  chat: chatApi
+};
+
 // Export simplified API
 export default {
-  supabase: supabaseApi,
-  chat: chatApi,
+  ...api,
   working: workingApi,
   RealtimeConnection
 };

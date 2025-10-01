@@ -148,8 +148,8 @@ export default function ChatInterface() {
     setDataInsights({})
 
     try {
-      // Use simplified chat API instead of broken AGNO agent
-      const chatResponse = await api.chat.sendMessage(currentInput, sessionId)
+      // ✅ Use unified API - routes through AGNO agent with fallback
+      const chatResponse = await api.sendMessage(currentInput, sessionId)
 
       setIsTyping(false)
 

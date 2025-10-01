@@ -415,18 +415,50 @@ app.index_string = '''
 
 def create_world_map():
     """Create interactive world map with ARGO float locations"""
-    fig = go.Figure()
-
-    # Sample ARGO float locations (Indian Ocean focus)
     import numpy as np
 
-    # Generate realistic ARGO float positions
-    lats = np.random.uniform(-60, 60, 25)
-    lons = np.random.uniform(-180, 180, 25)
-    float_ids = [f"ARGO-{1000+i:04d}" for i in range(25)]
+    fig = go.Figure()
 
-    # Add temperature data for color coding
-    temps = np.random.uniform(5, 30, 25)
+    try:
+        # ✅ Fetch real data from MCP API
+        response = requests.post(
+            f"{MCP_API_URL}/tools/list_profiles",
+            json={
+                "min_lat": -90,
+                "max_lat": 90,
+                "min_lon": -180,
+                "max_lon": 180,
+                "max_results": 100
+            },
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+
+            # Check if we got successful response with data
+            if data.get("success") and data.get("data"):
+                profiles = data["data"]
+
+                lats = [p["latitude"] for p in profiles]
+                lons = [p["longitude"] for p in profiles]
+                float_ids = [p["profile_id"] for p in profiles]
+                # Get average temperature from observations
+                temps = [p.get("avg_temperature", 15.0) if p.get("avg_temperature") else 15.0 for p in profiles]
+            else:
+                logger.warning(f"MCP API returned empty data, using sample")
+                return create_sample_map()
+        else:
+            logger.warning(f"MCP API returned {response.status_code}, using sample data")
+            return create_sample_map()
+
+    except Exception as e:
+        logger.error(f"Failed to fetch profiles: {e}")
+        return create_sample_map()
+
+    # Limit arrays to same length
+    min_len = min(len(lats), len(lons), len(float_ids), len(temps))
+    lats, lons, float_ids, temps = lats[:min_len], lons[:min_len], float_ids[:min_len], temps[:min_len]
 
     fig.add_trace(go.Scattergeo(
         lat=lats,
@@ -447,7 +479,7 @@ def create_world_map():
 
     fig.update_layout(
         title={
-            'text': "🌍 Global ARGO Float Network",
+            'text': f"🌍 Real-Time ARGO Float Network ({len(lats)} floats)",
             'x': 0.5,
             'xanchor': 'center',
             'font': {'size': 18, 'color': '#1e3c72'}

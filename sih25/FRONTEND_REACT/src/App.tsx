@@ -118,28 +118,50 @@ function Dashboard() {
   const fetchStats = async () => {
     setConnectionStatus('loading')
     try {
-      // Use direct Supabase connection instead of broken MCP
-      console.log('🔄 Fetching stats directly from Supabase...')
+      console.log('🔄 Fetching stats from backend...')
 
-      // First check if Supabase is healthy
-      const isHealthy = await api.supabase.getHealth()
+      // ✅ Check backend health first
+      const isHealthy = await api.checkBackendHealth()
+
       if (!isHealthy) {
-        throw new Error('Supabase connection failed')
+        console.warn('⚠️ Backend offline, trying Supabase directly')
+        // Fallback to Supabase (existing code)
+        const profiles = await api.supabase.getProfiles(500)
+        console.log(`✅ Fetched ${profiles.length} profiles via Supabase fallback`)
+
+        if (profiles.length > 0) {
+          const temps = profiles.map((p) => p.temperature).filter((t) => !isNaN(t) && t !== 0)
+          const salinities = profiles.map((p) => p.salinity).filter((s) => !isNaN(s) && s !== 0)
+          const depths = profiles.map((p) => p.depth).filter((d) => !isNaN(d) && d !== 0)
+
+          setStats({
+            totalProfiles: profiles.length,
+            avgTemperature: temps.length > 0 ? temps.reduce((a: number, b: number) => a + b, 0) / temps.length : 0,
+            avgSalinity: salinities.length > 0 ? salinities.reduce((a: number, b: number) => a + b, 0) / salinities.length : 0,
+            depthRange: {
+              min: depths.length > 0 ? Math.min(...depths) : 0,
+              max: depths.length > 0 ? Math.max(...depths) : 0
+            }
+          })
+          setConnectionStatus('connected')
+          return
+        }
       }
 
-      // Get some sample data directly from Supabase
-      const profiles = await api.supabase.getProfiles(500)
-      console.log(`✅ Fetched ${profiles.length} profiles from Supabase`)
+      // ✅ Fetch from backend (which uses MCP tools and auto-falls back to Supabase)
+      const profiles = await api.getProfiles(500)
+      console.log(`✅ Fetched ${profiles.length} profiles via unified API`)
 
       if (profiles.length > 0) {
-        const temps = profiles.map((p) => p.temperature).filter((t) => !isNaN(t) && t !== 0)
-        const salinities = profiles.map((p) => p.salinity).filter((s) => !isNaN(s) && s !== 0)
-        const depths = profiles.map((p) => p.depth).filter((d) => !isNaN(d) && d !== 0)
+        // Calculate stats from profiles
+        const temps = profiles.map((p: any) => p.temperature).filter((t: number) => !isNaN(t) && t !== 0)
+        const salinities = profiles.map((p: any) => p.salinity).filter((s: number) => !isNaN(s) && s !== 0)
+        const depths = profiles.map((p: any) => p.depth).filter((d: number) => !isNaN(d) && d !== 0)
 
         setStats({
           totalProfiles: profiles.length,
-          avgTemperature: temps.length > 0 ? temps.reduce((a: number, b: number) => a + b, 0) / temps.length : 0,
-          avgSalinity: salinities.length > 0 ? salinities.reduce((a: number, b: number) => a + b, 0) / salinities.length : 0,
+          avgTemperature: temps.length > 0 ? temps.reduce((a: any, b: any) => a + b, 0) / temps.length : 0,
+          avgSalinity: salinities.length > 0 ? salinities.reduce((a: any, b: any) => a + b, 0) / salinities.length : 0,
           depthRange: {
             min: depths.length > 0 ? Math.min(...depths) : 0,
             max: depths.length > 0 ? Math.max(...depths) : 0
@@ -147,25 +169,12 @@ function Dashboard() {
         })
         setConnectionStatus('connected')
       } else {
-        // Show placeholder data when no profiles returned
-        setStats({
-          totalProfiles: 0,
-          avgTemperature: 0,
-          avgSalinity: 0,
-          depthRange: { min: 0, max: 0 }
-        })
         setConnectionStatus('offline')
       }
     } catch (error) {
-      console.error('❌ Failed to fetch stats from Supabase:', error)
-      // Show mock data when API fails
-      setStats({
-        totalProfiles: 406, // We know this from database
-        avgTemperature: 12.5,
-        avgSalinity: 35.2,
-        depthRange: { min: 100, max: 2000 }
-      })
+      console.error('❌ Failed to fetch stats:', error)
       setConnectionStatus('offline')
+      // Show offline message
     }
   }
 
