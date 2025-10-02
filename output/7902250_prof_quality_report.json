@@ -1,0 +1,136 @@
+{
+  "total_records": 2457,
+  "completeness": {
+    "float_id": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "data_mode": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "timestamp": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "latitude": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "longitude": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "cycle_number": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "pres_qc": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "pres": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "pres_error": {
+      "non_null_count": 0,
+      "completeness_ratio": 0.0
+    },
+    "temp_qc": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "temp": {
+      "non_null_count": 2455,
+      "completeness_ratio": 0.9991859991859992
+    },
+    "temp_error": {
+      "non_null_count": 0,
+      "completeness_ratio": 0.0
+    },
+    "psal_qc": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "psal": {
+      "non_null_count": 2452,
+      "completeness_ratio": 0.9979649979649979
+    },
+    "psal_error": {
+      "non_null_count": 0,
+      "completeness_ratio": 0.0
+    },
+    "depth_m": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "n_levels": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "max_pressure": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "temp_range": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    },
+    "sal_range": {
+      "non_null_count": 2457,
+      "completeness_ratio": 1.0
+    }
+  },
+  "qc_summary": {
+    "pres_qc": {
+      "1": 2457
+    },
+    "temp_qc": {
+      "1": 2455,
+      "4": 2
+    },
+    "psal_qc": {
+      "1": 2452,
+      "4": 3,
+      "3": 2
+    }
+  },
+  "coordinate_coverage": {
+    "valid_coordinates": 2457,
+    "lat_range": [
+      -2.2803766666666667,
+      0.035785
+    ],
+    "lon_range": [
+      79.116755,
+      91.89367
+    ]
+  },
+  "parameter_coverage": {
+    "pres": {
+      "available": true,
+      "valid_measurements": 2457,
+      "coverage_ratio": 1.0
+    },
+    "temp": {
+      "available": true,
+      "valid_measurements": 2455,
+      "coverage_ratio": 0.9991859991859992
+    },
+    "psal": {
+      "available": true,
+      "valid_measurements": 2452,
+      "coverage_ratio": 0.9979649979649979
+    },
+    "doxy": {
+      "available": false
+    },
+    "chla": {
+      "available": false
+    },
+    "bbp": {
+      "available": false
+    }
+  }
+}

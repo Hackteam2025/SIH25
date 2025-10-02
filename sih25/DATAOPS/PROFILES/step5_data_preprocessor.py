@@ -112,13 +112,20 @@ class ArgoDataProcessor:
     def _safe_qc_check(self, qc_value) -> bool:
         """Safely check if QC flag is good, handling both numeric and character flags"""
         try:
+            # Handle numpy arrays (extract scalar)
+            if isinstance(qc_value, np.ndarray):
+                if qc_value.size == 1:
+                    qc_value = qc_value.item()
+                else:
+                    return False  # Shouldn't happen for single value
+
             if isinstance(qc_value, (bytes, str)):
                 # Handle character flags like 'B' - decode if needed
                 if isinstance(qc_value, bytes):
                     qc_str = qc_value.decode('ascii', errors='ignore').strip()
                 else:
                     qc_str = str(qc_value).strip()
-                
+
                 # Convert character flags to numeric if possible
                 if qc_str.isdigit():
                     return int(qc_str) in self.good_qc_flags
@@ -133,26 +140,86 @@ class ArgoDataProcessor:
             # If we can't parse the QC flag, be conservative but permissive
             return True
 
+    def _safe_extract_value(self, xr_value) -> float:
+        """Safely extract float value from xarray DataArray"""
+        try:
+            val = xr_value.values
+            # Handle numpy arrays
+            if isinstance(val, np.ndarray):
+                if val.size == 1:
+                    val = val.item()
+                else:
+                    return None
+            # Check for NaN - handle both Python and numpy numeric types
+            if not (isinstance(val, str) or val is None):
+                if not np.isnan(val):
+                    return float(val)
+            return None
+        except:
+            return None
+
 
 @task(name="data-preprocessing")
 def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -> pd.DataFrame:
     """
     Preprocess Argo data following best practices for variable selection and QC
-    
+
     Args:
         nc_file_path: Path to NetCDF file
         validation_result: Validation results from step 4
-        
+
     Returns:
         Preprocessed DataFrame ready for storage
     """
     logger = get_run_logger()
     nc_file = Path(nc_file_path)
-    
+
     if not validation_result["is_valid"]:
         logger.error(f"Cannot preprocess invalid file: {nc_file.name}")
         raise ValueError("File failed validation - cannot preprocess")
-    
+
+    # Check if this is a metadata file
+    if validation_result.get("summary", {}).get("file_type") == "metadata":
+        logger.info(f"Processing metadata file: {nc_file.name}")
+
+        # Open dataset to extract metadata
+        ds = xr.open_dataset(nc_file, decode_cf=False)
+        processor = ArgoDataProcessor()
+
+        try:
+            # Extract metadata variables
+            metadata_dict = {}
+
+            # Platform information
+            if 'PLATFORM_NUMBER' in ds.variables:
+                metadata_dict['platform_number'] = processor._decode_char_array(ds['PLATFORM_NUMBER'].values)
+
+            # Float configuration
+            for var in ['PTT', 'TRANS_SYSTEM', 'POSITIONING_SYSTEM', 'PLATFORM_FAMILY',
+                       'PLATFORM_TYPE', 'PLATFORM_MAKER', 'FIRMWARE_VERSION',
+                       'FLOAT_SERIAL_NO', 'WMO_INST_TYPE']:
+                if var in ds.variables:
+                    metadata_dict[var.lower()] = processor._decode_char_array(ds[var].values)
+
+            # Dates
+            for var in ['DATE_CREATION', 'DATE_UPDATE']:
+                if var in ds.variables:
+                    metadata_dict[var.lower()] = processor._decode_char_array(ds[var].values)
+
+            # Create a single-row DataFrame with metadata
+            metadata_df = pd.DataFrame([metadata_dict])
+            metadata_df['file_name'] = nc_file.name
+            metadata_df['file_type'] = 'metadata'
+
+            logger.info(f"Extracted {len(metadata_dict)} metadata fields")
+            ds.close()
+            return metadata_df
+
+        except Exception as e:
+            logger.error(f"Failed to extract metadata: {e}")
+            ds.close()
+            return pd.DataFrame()
+
     logger.info(f"Starting data preprocessing for: {nc_file.name}")
     
     # Open dataset with proper decoding
@@ -208,13 +275,33 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
         
         # Process each profile
         for prof_idx in range(n_prof):
-            
+
+            # Extract profile-specific DATA_MODE if available
+            profile_data_mode = data_mode  # Default
+            if 'DATA_MODE' in ds.variables and ds.dims.get('N_PROF', 0) > 1:
+                try:
+                    mode_val = ds['DATA_MODE'].isel(N_PROF=prof_idx).values
+                    if isinstance(mode_val, bytes):
+                        profile_data_mode = mode_val.decode('ascii').strip()
+                    elif isinstance(mode_val, np.ndarray) and mode_val.size == 1:
+                        mode_val = mode_val.item()
+                        if isinstance(mode_val, bytes):
+                            profile_data_mode = mode_val.decode('ascii').strip()
+                        else:
+                            profile_data_mode = str(mode_val).strip()
+                    else:
+                        profile_data_mode = str(mode_val).strip()
+                    if not profile_data_mode:
+                        profile_data_mode = 'R'  # Default to real-time if empty
+                except:
+                    profile_data_mode = data_mode
+
             # Extract profile metadata
             profile_record = {
                 'file_name': nc_file.name,
                 'float_id': float_id,
                 'profile_idx': prof_idx,
-                'data_mode': data_mode
+                'data_mode': profile_data_mode
             }
             
             # Extract time
@@ -247,10 +334,14 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
                 # Process each parameter
                 for param in processor.core_params + processor.bgc_params:
                     if param in ds.variables or f"{param}_ADJUSTED" in ds.variables:
-                        
+
                         # Choose appropriate variable (raw vs adjusted)
-                        data_var = processor._choose_variable(ds, param, data_mode, param_data_modes)
-                        
+                        data_var = processor._choose_variable(ds, param, profile_data_mode, param_data_modes)
+
+                        # Debug for first profile
+                        if prof_idx == 0 and level_idx < 2:
+                            logger.warning(f"P{prof_idx}L{level_idx} {param}: data_var={data_var is not None}, in_ds={param in ds.variables}")
+
                         if data_var is not None:
                             # Extract value for this profile and level
                             if n_prof > 1:
@@ -265,28 +356,49 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
                                 
                                 # Store original QC value for reference
                                 try:
-                                    if isinstance(qc_value.values, (bytes, str)):
-                                        level_record[f'{param.lower()}_qc'] = str(qc_value.values).strip()
+                                    qc_val = qc_value.values
+                                    # Extract scalar if it's an array
+                                    if isinstance(qc_val, np.ndarray) and qc_val.size == 1:
+                                        qc_val = qc_val.item()
+
+                                    # Decode bytes to string/int
+                                    if isinstance(qc_val, bytes):
+                                        qc_str = qc_val.decode('ascii').strip()
+                                        if qc_str.isdigit():
+                                            level_record[f'{param.lower()}_qc'] = int(qc_str)
+                                        else:
+                                            level_record[f'{param.lower()}_qc'] = qc_str
+                                    elif isinstance(qc_val, str):
+                                        if qc_val.isdigit():
+                                            level_record[f'{param.lower()}_qc'] = int(qc_val)
+                                        else:
+                                            level_record[f'{param.lower()}_qc'] = qc_val
+                                    elif isinstance(qc_val, (int, float)) and not np.isnan(qc_val):
+                                        level_record[f'{param.lower()}_qc'] = int(qc_val)
                                     else:
-                                        level_record[f'{param.lower()}_qc'] = int(qc_value.values) if not np.isnan(qc_value.values) else None
+                                        level_record[f'{param.lower()}_qc'] = None
                                 except:
-                                    level_record[f'{param.lower()}_qc'] = str(qc_value.values)
+                                    level_record[f'{param.lower()}_qc'] = None
                                 
                                 # Only include data with good QC flags using safe check
                                 if processor._safe_qc_check(qc_value.values):
-                                    level_record[param.lower()] = float(value.values) if not np.isnan(value.values) else None
+                                    extracted_val = processor._safe_extract_value(value)
+                                    level_record[param.lower()] = extracted_val
+                                    # Debug first few extractions
+                                    if prof_idx == 0 and level_idx < 3 and param == 'PRES':
+                                        logger.warning(f"PRES extraction: raw={value.values}, qc_pass={processor._safe_qc_check(qc_value.values)}, extracted={extracted_val}")
                                 else:
                                     level_record[param.lower()] = None
                             else:
                                 # No QC available, include raw value
-                                level_record[param.lower()] = float(value.values) if not np.isnan(value.values) else None
+                                level_record[param.lower()] = processor._safe_extract_value(value)
                                 level_record[f'{param.lower()}_qc'] = None
-                            
+
                             # Add error estimate if available
                             error_var_name = f"{param}_ADJUSTED_ERROR"
                             if error_var_name in ds.variables:
                                 error_val = ds[error_var_name].isel(N_PROF=prof_idx, N_LEVELS=level_idx) if n_prof > 1 else ds[error_var_name].isel(N_LEVELS=level_idx)
-                                level_record[f'{param.lower()}_error'] = float(error_val.values) if not np.isnan(error_val.values) else None
+                                level_record[f'{param.lower()}_error'] = processor._safe_extract_value(error_val)
                         else:
                             logger.debug(f"No data variable found for {param} at level {level_idx}")
                     else:
@@ -295,11 +407,9 @@ def preprocess_argo_data(nc_file_path: str, validation_result: Dict[str, Any]) -
                 # Only add record if it has at least pressure data
                 if level_record.get('pres') is not None:
                     processed_records.append(level_record)
-                else:
-                    # Debug: print why record was rejected
-                    missing_params = [param for param in ['pres', 'temp', 'psal'] if level_record.get(param) is None]
-                    if missing_params:
-                        logger.debug(f"Level {level_idx} rejected: missing {missing_params}")
+                # Add debug logging for first few rejections
+                elif prof_idx == 0 and level_idx < 5:
+                    logger.warning(f"Profile {prof_idx} Level {level_idx} rejected: pres={level_record.get('pres')}")
                     
         logger.info(f"Total processed records before filtering: {len(processed_records)}")
         

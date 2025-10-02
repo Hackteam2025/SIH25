@@ -94,7 +94,7 @@ async def argo_data_pipeline(
                 logger.warning("Continuing despite validation errors due to skip_validation_errors=True")
         
         logger.info(f"Validation complete - Valid: {validation_result.is_valid}, Records: {validation_result.valid_records}")
-        
+
         # Step 5: Data Preprocessing
         logger.info("Step 5: Starting data preprocessing...")
         try:

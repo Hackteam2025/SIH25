@@ -45,27 +45,41 @@ class ArgoValidationResult(BaseModel):
 def validate_argo_data(nc_file_path: str, schema_info: Dict[str, Any]) -> ArgoValidationResult:
     """
     Validate Argo NetCDF data for required fields, ranges, and quality
-    
+
     Args:
         nc_file_path: Path to NetCDF file
         schema_info: Schema information from step 3
-        
+
     Returns:
         Validation results
     """
     logger = get_run_logger()
     nc_file = Path(nc_file_path)
     config = ArgoValidationConfig()
-    
+
     logger.info(f"Starting data validation for: {nc_file.name}")
-    
+
     # Open dataset with proper decoding for validation
     ds = xr.open_dataset(nc_file, decode_cf=True, mask_and_scale=True)
-    
+
     validation_errors = []
     warnings_list = []
-    
+
     try:
+        # Check if this is a metadata file
+        file_type = schema_info.get("file_type", "unknown")
+        if file_type == "metadata":
+            logger.info("Skipping core variable validation for metadata file")
+            return ArgoValidationResult(
+                file_name=nc_file.name,
+                is_valid=True,
+                total_records=1,
+                valid_records=1,
+                validation_errors=[],
+                warnings=["Metadata file - core validation skipped"],
+                summary={"status": "passed", "file_type": "metadata", "note": "Metadata files have different structure"}
+            )
+
         # 1. Check for required core variables
         logger.info("Checking required core variables...")
         missing_vars = []

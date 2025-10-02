@@ -89,6 +89,17 @@ async def load_parquet_to_postgres(
         if profiles_df is not None:
             logger.info(f"Loaded {len(profiles_df)} profile records")
 
+        # Check if this is metadata
+        if 'file_type' in data_df.columns and (data_df['file_type'] == 'metadata').any():
+            logger.info("Detected metadata file - skipping observation data loading")
+            return {
+                "floats_processed": 0,
+                "profiles_processed": 0,
+                "observations_processed": 0,
+                "metadata_processed": len(data_df),
+                "message": "Metadata file processed (stored in parquet only)"
+            }
+
         # Process and insert data
         results = await _process_and_insert_data(
             db_manager=db_manager,
