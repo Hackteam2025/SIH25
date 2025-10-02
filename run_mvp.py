@@ -198,20 +198,20 @@ class ServiceOrchestrator:
         ))
 
         # Story 4: Frontend Dashboard
-        self.services.append(ServiceConfig(
-            name="Frontend_Dashboard",
-            command=[sys.executable, "-m", "sih25.FRONTEND.app"],
-            port=8050,
-            health_endpoint="http://localhost:8050/_dash-layout",
-            working_dir=str(self.base_dir),
-            env_vars={
-                "AGENT_API_URL": "http://localhost:8001",
-                "MCP_API_URL": "http://localhost:8000",
-                "DATAOPS_API_URL": "http://localhost:8002"
-            },
-            startup_delay=6,
-            color=Colors.FRONTEND
-        ))
+        # self.services.append(ServiceConfig(
+        #     name="Frontend_Dashboard",
+        #     command=[sys.executable, "-m", "sih25.FRONTEND.app"],
+        #     port=8050,
+        #     health_endpoint="http://localhost:8050/_dash-layout",
+        #     working_dir=str(self.base_dir),
+        #     env_vars={
+        #         "AGENT_API_URL": "http://localhost:8001",
+        #         "MCP_API_URL": "http://localhost:8000",
+        #         "DATAOPS_API_URL": "http://localhost:8002"
+        #     },
+        #     startup_delay=6,
+        #     color=Colors.FRONTEND
+        # ))
 
     def check_prerequisites(self) -> bool:
         """Check if all prerequisites are met with enhanced logging."""

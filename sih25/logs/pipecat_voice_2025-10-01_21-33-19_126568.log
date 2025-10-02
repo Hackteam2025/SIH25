@@ -1,0 +1,127 @@
+2025-10-01T21:33:19.131299+0530 | INFO | __main__:262 | FloatChat Voice AI starting...
+2025-10-01T21:33:19.131466+0530 | INFO | __main__:263 | Room URL: https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:33:19.131515+0530 | INFO | __main__:264 | Using Groq LLM, Soniox STT, Sarvam AI TTS
+2025-10-01T21:33:19.131658+0530 | INFO | __main__:172 | ============================================================
+2025-10-01T21:33:19.131724+0530 | INFO | __main__:173 | 🤖 VOICE BOT STARTING
+2025-10-01T21:33:19.131771+0530 | INFO | __main__:174 | ============================================================
+2025-10-01T21:33:19.131808+0530 | INFO | __main__:177 | 🔧 Initializing Daily transport...
+2025-10-01T21:33:19.131844+0530 | INFO | __main__:93 | Creating Daily transport for room: https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:33:19.263115+0530 | INFO | __main__:180 | 🎤 Initializing Soniox STT...
+2025-10-01T21:33:19.263296+0530 | INFO | __main__:122 | Initializing Soniox STT with Hindi/English support
+2025-10-01T21:33:19.263433+0530 | INFO | __main__:183 | 🧠 Initializing Groq LLM...
+2025-10-01T21:33:19.263478+0530 | INFO | __main__:139 | Initializing Groq LLM: moonshotai/kimi-k2-instruct-0905
+2025-10-01T21:33:19.316141+0530 | INFO | __main__:186 | 🔊 Initializing Sarvam AI TTS...
+2025-10-01T21:33:19.316319+0530 | INFO | __main__:153 | Initializing Sarvam AI TTS with Hindi/English support
+2025-10-01T21:33:19.316501+0530 | INFO | __main__:190 | 💬 Setting up conversation context...
+2025-10-01T21:33:19.316643+0530 | INFO | __main__:202 | 🔗 Building Pipecat pipeline...
+2025-10-01T21:33:19.317000+0530 | INFO | __main__:214 | ⚙️ Creating pipeline task...
+2025-10-01T21:33:19.317317+0530 | INFO | __main__:249 | 🚀 Starting voice bot pipeline...
+2025-10-01T21:33:19.317352+0530 | INFO | __main__:250 | ✅ Voice bot is now listening for audio input...
+2025-10-01T21:33:19.317879+0530 | ERROR | pipecat.processors.frame_processor:834 | DailyInputTransport#0: error processing frame: 'dict' object has no attribute 'start_secs'
+Traceback (most recent call last):
+
+  File "/Users/prada/Desktop/coding/SIH25/sih25/VOICE_AI/pipecat_bot.py", line 278, in <module>
+    asyncio.run(main(args.url, args.token))
+    │       │   │    │    │    │    └ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyIjoiTGtvU3dpYnVJcWFjS1VoZDZVNGQiLCJvIjpmYWxzZSwiZXhwIjoxNzU5MzM4MTk1LCJkIjoiOTAyOTB...
+    │       │   │    │    │    └ Namespace(url='https://pdv.daily.co/LkoSwibuIqacKUhd6U4d', token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyIjoiTGtvU3dpYnVJcW...
+    │       │   │    │    └ 'https://pdv.daily.co/LkoSwibuIqacKUhd6U4d'
+    │       │   │    └ Namespace(url='https://pdv.daily.co/LkoSwibuIqacKUhd6U4d', token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyIjoiTGtvU3dpYnVJcW...
+    │       │   └ <function main at 0x1204bd580>
+    │       └ <function run at 0x1036b3f60>
+    └ <module 'asyncio' from '/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/__init_...
+
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           │      │   └ <coroutine object main at 0x12044f140>
+           │      └ <function Runner.run at 0x10371c0e0>
+           └ <asyncio.runners.Runner object at 0x1204c3a50>
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<main() running at /Users/prada/Desktop/coding/SIH25/sih25/VOICE_AI/pipecat_bot.py:266> wait...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x103719bc0>
+           │    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x1204c3a50>
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x103719b20>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x10371b920>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/base_events.py", line 1936, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x103664d60>
+    └ <Handle Task.task_wakeup(<Future finished result=None>)>
+  File "/Users/prada/.local/share/uv/python/cpython-3.11.13-macos-aarch64-none/lib/python3.11/asyncio/events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup(<Future finished result=None>)>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup(<Future finished result=None>)>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup(<Future finished result=None>)>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/utils/asyncio/task_manager.py", line 159, in run_coroutine
+    await coroutine
+          └ <coroutine object FrameProcessor.__input_frame_task_handler at 0x12069f6a0>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/processors/frame_processor.py", line 855, in __input_frame_task_handler
+    await self.__process_frame(frame, direction, callback)
+          │                    │      │          └ None
+          │                    │      └ <FrameDirection.DOWNSTREAM: 1>
+          │                    └ StartFrame(id=31, name='StartFrame#0', pts=None, metadata={}, transport_source=None, transport_destination=None, audio_in_sam...
+          └ <pipecat.transports.daily.transport.DailyInputTransport object at 0x10eb50750>
+> File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/processors/frame_processor.py", line 829, in __process_frame
+    await self.process_frame(frame, direction)
+          │    │             │      └ <FrameDirection.DOWNSTREAM: 1>
+          │    │             └ StartFrame(id=31, name='StartFrame#0', pts=None, metadata={}, transport_source=None, transport_destination=None, audio_in_sam...
+          │    └ <function DailyInputTransport.process_frame at 0x10eecf740>
+          └ <pipecat.transports.daily.transport.DailyInputTransport object at 0x10eb50750>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/transports/daily/transport.py", line 1536, in process_frame
+    await super().process_frame(frame, direction)
+                                │      └ <FrameDirection.DOWNSTREAM: 1>
+                                └ StartFrame(id=31, name='StartFrame#0', pts=None, metadata={}, transport_source=None, transport_destination=None, audio_in_sam...
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/transports/base_input.py", line 286, in process_frame
+    await self.start(frame)
+          │    │     └ StartFrame(id=31, name='StartFrame#0', pts=None, metadata={}, transport_source=None, transport_destination=None, audio_in_sam...
+          │    └ <function DailyInputTransport.start at 0x10eecf560>
+          └ <pipecat.transports.daily.transport.DailyInputTransport object at 0x10eb50750>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/transports/daily/transport.py", line 1476, in start
+    await super().start(frame)
+                        └ StartFrame(id=31, name='StartFrame#0', pts=None, metadata={}, transport_source=None, transport_destination=None, audio_in_sam...
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/transports/base_input.py", line 191, in start
+    self._params.vad_analyzer.set_sample_rate(self._sample_rate)
+    │    │       │            │               │    └ 16000
+    │    │       │            │               └ <pipecat.transports.daily.transport.DailyInputTransport object at 0x10eb50750>
+    │    │       │            └ <function SileroVADAnalyzer.set_sample_rate at 0x10d448fe0>
+    │    │       └ <pipecat.audio.vad.silero.SileroVADAnalyzer object at 0x11b701310>
+    │    └ DailyParams(camera_in_enabled=False, camera_out_enabled=True, camera_out_is_live=False, camera_out_width=1024, camera_out_hei...
+    └ <pipecat.transports.daily.transport.DailyInputTransport object at 0x10eb50750>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/audio/vad/silero.py", line 189, in set_sample_rate
+    super().set_sample_rate(sample_rate)
+                            └ 16000
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/audio/vad/vad_analyzer.py", line 142, in set_sample_rate
+    self.set_params(self._params)
+    │    │          │    └ {'threshold': 0.5, 'min_volume': 0.6}
+    │    │          └ <pipecat.audio.vad.silero.SileroVADAnalyzer object at 0x11b701310>
+    │    └ <function VADAnalyzer.set_params at 0x10d2e0680>
+    └ <pipecat.audio.vad.silero.SileroVADAnalyzer object at 0x11b701310>
+  File "/Users/prada/Desktop/coding/SIH25/.venv/lib/python3.11/site-packages/pipecat/audio/vad/vad_analyzer.py", line 157, in set_params
+    self._vad_start_frames = round(self._params.start_secs / vad_frames_per_sec)
+    │                              │    │                    └ 0.032
+    │                              │    └ {'threshold': 0.5, 'min_volume': 0.6}
+    │                              └ <pipecat.audio.vad.silero.SileroVADAnalyzer object at 0x11b701310>
+    └ <pipecat.audio.vad.silero.SileroVADAnalyzer object at 0x11b701310>
+
+AttributeError: 'dict' object has no attribute 'start_secs'
+2025-10-01T21:33:19.324301+0530 | WARNING | pipecat.pipeline.task:657 | PipelineTask#0: Something went wrong: ErrorFrame#0(error: 'dict' object has no attribute 'start_secs', fatal: False)
+2025-10-01T21:33:21.285281+0530 | INFO | pipecat.transports.daily.transport:611 | Joining https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:33:24.436157+0530 | INFO | pipecat.transports.daily.transport:631 | Joined https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:33:24.437480+0530 | INFO | pipecat.transports.daily.transport:2291 | Participant joined 8621b8d6-30b5-4867-8ea4-ad40292e3f86
+2025-10-01T21:33:24.438068+0530 | INFO | __main__:245 | 📞 Call state updated: joining
+2025-10-01T21:33:24.438203+0530 | INFO | __main__:227 | 👤 First participant joined: 8621b8d6-30b5-4867-8ea4-ad40292e3f86
+2025-10-01T21:33:24.438569+0530 | INFO | __main__:245 | 📞 Call state updated: joined
+2025-10-01T21:34:26.892481+0530 | WARNING | pipecat.pipeline.runner:124 | Interruption detected. Cancelling runner PipelineRunner#0
+2025-10-01T21:34:26.894576+0530 | INFO | pipecat.transports.daily.transport:720 | Leaving https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:34:26.895731+0530 | INFO | __main__:245 | 📞 Call state updated: leaving
+2025-10-01T21:34:26.911633+0530 | INFO | pipecat.transports.daily.transport:732 | Left https://pdv.daily.co/LkoSwibuIqacKUhd6U4d
+2025-10-01T21:34:28.387199+0530 | INFO | __main__:257 | 🛑 Voice bot session ended
