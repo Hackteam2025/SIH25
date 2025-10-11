@@ -183,35 +183,35 @@ class ServiceOrchestrator:
         ))
 
         # Story 1: DataOps Processing Server
-        self.services.append(ServiceConfig(
-            name="DataOps_Server",
-            command=[sys.executable, "-m", "sih25.DATAOPS.main"],
-            port=8002,
-            health_endpoint="http://localhost:8002/health",
-            working_dir=str(self.base_dir),
-            env_vars={
-                "DATAOPS_API_PORT": "8002",
-                "API_HOST": "0.0.0.0"
-            },
-            startup_delay=5,
-            color=Colors.DATAOPS
-        ))
-
-        # Story 4: Frontend Dashboard
         # self.services.append(ServiceConfig(
-        #     name="Frontend_Dashboard",
-        #     command=[sys.executable, "-m", "sih25.FRONTEND.app"],
-        #     port=8050,
-        #     health_endpoint="http://localhost:8050/_dash-layout",
+        #     name="DataOps_Server",
+        #     command=[sys.executable, "-m", "sih25.DATAOPS.main"],
+        #     port=8002,
+        #     health_endpoint="http://localhost:8002/health",
         #     working_dir=str(self.base_dir),
         #     env_vars={
-        #         "AGENT_API_URL": "http://localhost:8001",
-        #         "MCP_API_URL": "http://localhost:8000",
-        #         "DATAOPS_API_URL": "http://localhost:8002"
+        #         "DATAOPS_API_PORT": "8002",
+        #         "API_HOST": "0.0.0.0"
         #     },
-        #     startup_delay=6,
-        #     color=Colors.FRONTEND
+        #     startup_delay=5,
+        #     color=Colors.DATAOPS
         # ))
+
+        # Story 4: Frontend Dashboard (React + Bun)
+        self.services.append(ServiceConfig(
+            name="Frontend_Dashboard",
+            command=["bun", "run", "dev"],
+            port=5173,  # Default Vite port
+            health_endpoint="http://localhost:5173",
+            working_dir=str(self.base_dir / "sih25" / "FRONTEND_REACT"),
+            env_vars={
+                "VITE_AGENT_API_URL": "http://localhost:8001",
+                "VITE_MCP_API_URL": "http://localhost:8000",
+                "VITE_DATAOPS_API_URL": "http://localhost:8002"
+            },
+            startup_delay=6,
+            color=Colors.FRONTEND
+        ))
 
     def check_prerequisites(self) -> bool:
         """Check if all prerequisites are met with enhanced logging."""
@@ -223,6 +223,23 @@ class ServiceOrchestrator:
             return False
         else:
             logger.info(f"✅ Python version: {sys.version.split()[0]}")
+
+        # Check if bun is installed
+        try:
+            result = subprocess.run(['bun', '--version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                bun_version = result.stdout.strip()
+                logger.info(f"✅ Bun version: {bun_version}")
+            else:
+                logger.error("❌ Bun is not installed or not in PATH")
+                logger.info("Please install bun from: https://bun.sh")
+                return False
+        except FileNotFoundError:
+            logger.error("❌ Bun is not installed or not in PATH")
+            logger.info("Please install bun from: https://bun.sh")
+            return False
+        except Exception as e:
+            logger.warning(f"⚠️ Could not verify bun installation: {e}")
 
         # Check environment variables
         required_env_vars = [
@@ -444,7 +461,7 @@ class ServiceOrchestrator:
         print(f"{Colors.BOLD}{Colors.ORCHESTRATOR}🌊 FLOATCHAT MVP - ALL SYSTEMS OPERATIONAL 🌊{Colors.RESET}")
         print(f"{Colors.BOLD}{'='*80}{Colors.RESET}")
         print(f"{Colors.BOLD}🎯 Service Endpoints:{Colors.RESET}")
-        print(f"  {Colors.FRONTEND}📊 Frontend Dashboard:     http://localhost:8050{Colors.RESET}")
+        print(f"  {Colors.FRONTEND}📊 Frontend Dashboard:     http://localhost:5173{Colors.RESET}")
         print(f"  {Colors.AGNO}🤖 AI Agent API:          http://localhost:8001{Colors.RESET}")
         print(f"  {Colors.MCP}🔧 MCP Tool Server:       http://localhost:8000{Colors.RESET}")
         print(f"  {Colors.DATAOPS}📈 DataOps API:           http://localhost:8002{Colors.RESET}")
@@ -459,7 +476,7 @@ class ServiceOrchestrator:
         print(f"  🔍 Logs are filtered to show only relevant information")
         print(f"\n{Colors.WARNING}Press Ctrl+C to stop all services{Colors.RESET}")
         print(f"\n{Colors.BOLD}💡 Quick Start:{Colors.RESET}")
-        print(f"1. Open {Colors.FRONTEND}http://localhost:8050{Colors.RESET} in your browser")
+        print(f"1. Open {Colors.FRONTEND}http://localhost:5173{Colors.RESET} in your browser")
         print(f"2. Click the {Colors.BOLD}🎤 button{Colors.RESET} to enable voice mode")
         print(f"3. Ask: {Colors.SUCCESS}'Show me temperature profiles near the equator'{Colors.RESET}")
         print(f"4. Upload NetCDF files in the admin panel")

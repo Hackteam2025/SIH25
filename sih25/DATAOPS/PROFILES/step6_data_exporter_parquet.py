@@ -237,20 +237,24 @@ def create_quality_report(df: pd.DataFrame) -> Dict[str, Any]:
                 'completeness_ratio': float(non_null_count / len(df))
             }
     
-    # QC flag analysis
-    qc_cols = [col for col in df.columns if col.endswith('_qc')]
+    # Generate summary for QC flags
+    qc_cols = [col for col in df.columns if col.endswith('_QC')]
+    report['qc_summary'] = {}
     for qc_col in qc_cols:
-        def clean_qc_val(val):
-            if isinstance(val, str) and val.startswith("[b'") and val.endswith("']"):
-                try:
-                    return int(val[3:-2])
-                except (ValueError, TypeError):
-                    return val
-            return val
+        qc_counts = df[qc_col].value_counts()
+        
+        def clean_key(k):
+            if isinstance(k, bytes):
+                return k.decode('utf-8')
+            return k
 
-        cleaned_series = df[qc_col].apply(clean_qc_val)
-        qc_counts = cleaned_series.value_counts().to_dict()
-        report['qc_summary'][qc_col] = {int(k): int(v) for k, v in qc_counts.items() if pd.notna(k)}
+        report['qc_summary'][qc_col] = {
+            int(clean_key(k)): int(v) 
+            for k, v in qc_counts.items() 
+            if pd.notna(k) and str(clean_key(k)).strip()
+        }
+
+    return report
     
     # Coordinate coverage
     if 'latitude' in df.columns and 'longitude' in df.columns:
