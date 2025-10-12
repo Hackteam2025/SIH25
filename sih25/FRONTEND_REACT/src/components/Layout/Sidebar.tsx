@@ -10,7 +10,7 @@ import {
   HelpCircle,
   Download,
   RefreshCw,
-  PlusSquare,
+  Upload,
   Mic
 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -39,23 +39,17 @@ const navigationItems = [
     badge: 'AI'
   },
   {
-    id: 'voice',
-    label: 'Voice AI',
-    icon: Mic,
-    description: 'Voice-powered queries',
-    badge: 'NEW'
-  },
-  {
     id: 'map',
     label: 'Map View',
     icon: Map,
     description: 'Geographic visualization'
   },
   {
-    id: 'insert',
-    label: 'Insert Data',
-    icon: PlusSquare,
-    description: 'Dev-only quick insert'
+    id: 'dataops',
+    label: 'DataOps Upload',
+    icon: Upload,
+    description: 'Upload and process NetCDF files',
+    badge: 'Pipeline'
   }
 ]
 

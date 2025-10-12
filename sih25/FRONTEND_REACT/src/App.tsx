@@ -5,12 +5,12 @@ import Sidebar from './components/Layout/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import DataVisualization from './components/DataVisualization'
 import MapVisualization from './components/MapVisualization'
-import InsertData from './components/InsertData'
+import DataOpsUpload from './components/DataOpsUpload'
 import ReactVoicePipecat from './components/ReactVoicePipecat'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from './services/api'
 
-type Tab = 'dashboard' | 'chat' | 'map' | 'insert' | 'voice'
+type Tab = 'dashboard' | 'chat' | 'map' | 'dataops' | 'voice'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
@@ -32,7 +32,7 @@ function App() {
       dashboard: 'Dashboard',
       chat: 'AI Chat',
       map: 'Map View',
-      insert: 'Insert Data',
+      dataops: 'DataOps Upload',
       voice: 'Voice AI'
     }
     document.title = `FloatChat – ${titles[activeTab]}`
@@ -44,8 +44,8 @@ function App() {
         return <ChatInterface />
       case 'map':
         return <MapVisualization />
-      case 'insert':
-        return <InsertData />
+      case 'dataops':
+        return <DataOpsUpload />
       case 'voice':
         return <ReactVoicePipecat />
       case 'dashboard':

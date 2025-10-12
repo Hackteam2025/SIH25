@@ -1,6 +1,6 @@
 {
   "file_prefix": "D2900765_067",
-  "export_timestamp": "2025-10-10T20:19:35.134856",
+  "export_timestamp": "2025-10-12T15:39:20.008610",
   "input_records": 64,
   "columns_exported": [
     "file_name",
@@ -28,9 +28,9 @@
     "sal_range"
   ],
   "files_created": {
-    "data_parquet": "output/D2900765_067_data.parquet",
-    "profiles_parquet": "output/D2900765_067_profiles.parquet",
-    "quality_report": "output/D2900765_067_quality_report.json"
+    "data_parquet": "sih25/DATAOPS/PROFILES/output/D2900765_067_data.parquet",
+    "profiles_parquet": "sih25/DATAOPS/PROFILES/output/D2900765_067_profiles.parquet",
+    "quality_report": "sih25/DATAOPS/PROFILES/output/D2900765_067_quality_report.json"
   },
   "parquet_compression": "snappy",
   "optimization_applied": true

@@ -183,19 +183,19 @@ class ServiceOrchestrator:
         ))
 
         # Story 1: DataOps Processing Server
-        # self.services.append(ServiceConfig(
-        #     name="DataOps_Server",
-        #     command=[sys.executable, "-m", "sih25.DATAOPS.main"],
-        #     port=8002,
-        #     health_endpoint="http://localhost:8002/health",
-        #     working_dir=str(self.base_dir),
-        #     env_vars={
-        #         "DATAOPS_API_PORT": "8002",
-        #         "API_HOST": "0.0.0.0"
-        #     },
-        #     startup_delay=5,
-        #     color=Colors.DATAOPS
-        # ))
+        self.services.append(ServiceConfig(
+            name="DataOps_Server",
+            command=[sys.executable, "-m", "sih25.DATAOPS.main"],
+            port=8002,
+            health_endpoint="http://localhost:8002/health",
+            working_dir=str(self.base_dir),
+            env_vars={
+                "DATAOPS_API_PORT": "8002",
+                "API_HOST": "0.0.0.0"
+            },
+            startup_delay=5,
+            color=Colors.DATAOPS
+        ))
 
         # Story 4: Frontend Dashboard (React + Bun)
         self.services.append(ServiceConfig(
