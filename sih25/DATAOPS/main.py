@@ -6,7 +6,7 @@ This server provides an API to trigger the data processing pipeline with job tra
 
 import os
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -16,6 +16,7 @@ import base64
 import uuid
 from datetime import datetime
 from enum import Enum
+import numpy as np
 
 # Fixed import path to use proper package structure
 from sih25.DATAOPS.PROFILES.main_orchestrator import argo_batch_pipeline
@@ -69,6 +70,24 @@ class JobStatusResponse(BaseModel):
 
 UPLOAD_DIR = "sih25/DATAOPS/PROFILES/data"
 
+def convert_numpy_types(obj: Any) -> Any:
+    """
+    Recursively convert numpy types to Python native types for JSON serialization.
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    return obj
+
 # Helper functions for job management
 def create_job(files_count: int) -> str:
     """Create a new processing job and return its ID"""
@@ -111,7 +130,8 @@ def update_job_status(
     if files_processed is not None:
         job["files_processed"] = files_processed
     if results:
-        job["results"] = results
+        # Convert numpy types to Python native types for JSON serialization
+        job["results"] = convert_numpy_types(results)
     if error:
         job["errors"].append(error)
 
@@ -247,7 +267,9 @@ async def list_jobs(limit: int = 50):
     jobs = list(job_store.values())
     # Sort by created_at descending
     jobs.sort(key=lambda x: x["created_at"], reverse=True)
-    return {"jobs": jobs[:limit], "total": len(jobs)}
+    # Convert numpy types to ensure JSON serialization
+    jobs = [convert_numpy_types(job) for job in jobs[:limit]]
+    return {"jobs": jobs, "total": len(job_store)}
 
 @app.post("/process")
 async def process_files(request: ProcessRequest):
@@ -282,13 +304,16 @@ async def process_files(request: ProcessRequest):
             output_dir=os.path.join("sih25/DATAOPS/PROFILES", request.output_dir),
             load_to_database=request.load_to_database,
         )
-        
+
+        # Convert numpy types to Python native types for JSON serialization
+        results = convert_numpy_types(results)
+
         if results.get("summary", {}).get("failed", 0) > 0:
             return {
                 "status": "completed_with_errors",
                 "results": results
             }
-        
+
         return {
             "status": "completed",
             "results": results
