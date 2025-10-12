@@ -62,6 +62,7 @@ dependencies = [
     "loguru>=0.7.0",
     "pipecat-ai[deepgram,openai]>=0.0.30",
     "aiohttp>=3.8.0",
+    "mistralai>=1.9.11",
 ]
 
 [build-system]

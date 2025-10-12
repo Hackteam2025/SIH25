@@ -132,23 +132,16 @@ async def _process_and_insert_data(
     # Extract observations data
     observations_data = _extract_observations_data(data_df)
 
-    # Insert data with separate transactions for better error handling
-    # Insert floats and profiles together since they have foreign key relationship
     async with db_manager.get_transaction() as conn:
-        # Insert floats
         floats_processed = await _insert_floats(
             conn, floats_data, deduplication_strategy
         )
-
-        # Insert profiles
         profiles_processed = await _insert_profiles(
             conn, profiles_data, deduplication_strategy
         )
-
-    # Insert observations using individual connections to avoid transaction rollback issues
-    observations_processed = await _insert_observations_individually(
-        db_manager, observations_data, deduplication_strategy
-    )
+        observations_processed = await _insert_observations_bulk(
+            conn, observations_data, deduplication_strategy
+        )
 
     return {
         "floats_processed": floats_processed,
@@ -159,75 +152,127 @@ async def _process_and_insert_data(
     }
 
 
-async def _insert_observations_individually(
-    db_manager: DatabaseManager,
+async def _insert_observations_bulk(
+    conn,
     observations_data: List[Dict[str, Any]],
     strategy: str
 ) -> int:
-    """Insert observations data one by one to avoid transaction rollback issues"""
-
+    """Bulk insert observations data using copy_records_to_table for performance."""
     if not observations_data:
         return 0
 
     logger = get_run_logger()
-    count = 0
+    
+    # Validate and clean data before bulk insertion
+    valid_records = []
+    for obs in observations_data:
+        if obs.get("profile_id") and obs.get("depth") is not None and obs.get("parameter") and obs.get("value") is not None:
+            valid_records.append((
+                obs["profile_id"],
+                obs["depth"],
+                obs["parameter"],
+                obs["value"],
+                obs.get("qc_flag", 1)
+            ))
+        else:
+            logger.warning(f"Skipping invalid observation record: {obs}")
 
-    # First, ensure the unique constraint exists
+    if not valid_records:
+        return 0
+
     try:
-        async with db_manager.get_connection() as conn:
-            await conn.execute("""
-                ALTER TABLE observations
-                ADD CONSTRAINT observations_unique_key
-                UNIQUE (profile_id, depth, parameter)
-            """)
-    except Exception:
-        # Constraint likely already exists
-        pass
+        # Use a temporary table for staging and then upsert
+        temp_table_name = f"temp_observations_{uuid.uuid4().hex}"
+        await conn.execute(f"""
+            CREATE TEMP TABLE {temp_table_name} (
+                profile_id VARCHAR(255) NOT NULL,
+                depth REAL NOT NULL,
+                parameter VARCHAR(50) NOT NULL,
+                value REAL NOT NULL,
+                qc_flag INTEGER
+            ) ON COMMIT DROP;
+        """)
 
-    if strategy == "upsert":
-        query = """
+        await conn.copy_records_to_table(
+            temp_table_name, 
+            records=valid_records, 
+            columns=['profile_id', 'depth', 'parameter', 'value', 'qc_flag']
+        )
+
+        if strategy == "upsert":
+            upsert_query = f"""
             INSERT INTO observations (profile_id, depth, parameter, value, qc_flag)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT ON CONSTRAINT observations_unique_key
-            DO UPDATE SET
+            SELECT * FROM {temp_table_name}
+            ON CONFLICT (profile_id, depth, parameter) DO UPDATE SET
                 value = EXCLUDED.value,
                 qc_flag = EXCLUDED.qc_flag,
-                created_at = NOW()
-        """
-    else:  # ignore
-        query = """
+                created_at = NOW();
+            """
+        else: # ignore
+            upsert_query = f"""
             INSERT INTO observations (profile_id, depth, parameter, value, qc_flag)
-            SELECT $1, $2, $3, $4, $5
-            WHERE NOT EXISTS (
-                SELECT 1 FROM observations
-                WHERE profile_id = $1 AND depth = $2 AND parameter = $3
-            )
-        """
+            SELECT * FROM {temp_table_name}
+            ON CONFLICT (profile_id, depth, parameter) DO NOTHING;
+            """
+        
+        result = await conn.execute(upsert_query)
+        inserted_count = int(result.split(" ")[-1])
+        logger.info(f"Bulk inserted/updated {inserted_count} observations.")
+        return inserted_count
 
-    # Insert each observation with its own connection to avoid transaction rollback
-    for obs_data in observations_data:
-        try:
-            # Validate the data before insertion
-            if obs_data["depth"] is None or obs_data["value"] is None:
-                logger.warning(f"Skipping observation with null depth or value: {obs_data}")
-                continue
+    except Exception as e:
+        logger.error(f"Bulk insert of observations failed: {e}")
+        raise
 
-            async with db_manager.get_connection() as conn:
-                await conn.execute(
-                    query,
-                    obs_data["profile_id"],
-                    obs_data["depth"],
-                    obs_data["parameter"],
-                    obs_data["value"],
-                    obs_data["qc_flag"]
-                )
-                count += 1
-        except Exception as e:
-            # Log but continue with other observations
-            logger.warning(f"Failed to insert observation {obs_data.get('parameter', 'unknown')} at depth {obs_data.get('depth', 'unknown')}: {e}")
-            continue
+def _decode_netcdf_string(value) -> str:
+    """
+    Decode NetCDF string data (handles byte arrays and character arrays).
 
-    return count
+    Args:
+        value: Value from NetCDF file (can be bytes, numpy array, or string)
+
+    Returns:
+        Decoded string
+    """
+    if value is None:
+        return ""
+
+    try:
+        # Handle numpy byte arrays (common in NetCDF files)
+        if hasattr(value, 'tobytes'):
+            decoded = value.tobytes().decode('ascii', errors='ignore').strip()
+            # Remove null terminators that NetCDF often includes
+            decoded = decoded.rstrip('\x00')
+            return decoded
+
+        # Handle regular bytes
+        elif isinstance(value, bytes):
+            decoded = value.decode('ascii', errors='ignore').strip()
+            decoded = decoded.rstrip('\x00')
+            return decoded
+
+        # Handle numpy arrays
+        elif hasattr(value, '__iter__') and not isinstance(value, str):
+            try:
+                # Try to decode as character array
+                chars = []
+                for c in value:
+                    if isinstance(c, bytes):
+                        chars.append(c.decode('ascii', errors='ignore'))
+                    elif isinstance(c, (int, np.integer)) and c != 0:
+                        chars.append(chr(int(c)))
+                    elif isinstance(c, str):
+                        chars.append(c)
+                result = ''.join(chars).strip()
+                return result.rstrip('\x00')
+            except:
+                return str(value).strip()
+
+        # Already a string
+        else:
+            return str(value).strip().rstrip('\x00')
+    except:
+        return str(value)
 
 
 def _clean_string_for_postgres(value) -> str:
@@ -244,8 +289,8 @@ def _clean_string_for_postgres(value) -> str:
     if value is None:
         return ""
 
-    # Convert to string
-    text = str(value)
+    # First decode if it's NetCDF data
+    text = _decode_netcdf_string(value)
 
     # Remove null bytes (0x00) which PostgreSQL cannot handle in text fields
     text = text.replace('\x00', '')
@@ -470,17 +515,16 @@ async def _insert_floats(
         ON CONFLICT (wmo_id) DO NOTHING
         """
 
-    count = 0
-    for float_data in floats_data:
-        await conn.execute(
-            query,
-            float_data["wmo_id"],
-            json.dumps(float_data["deployment_info"]),
-            json.dumps(float_data["pi_details"])
-        )
-        count += 1
-
-    return count
+    data_to_insert = [
+        (
+            f["wmo_id"],
+            json.dumps(f["deployment_info"]),
+            json.dumps(f["pi_details"])
+        ) for f in floats_data
+    ]
+    
+    await conn.executemany(query, data_to_insert)
+    return len(data_to_insert)
 
 
 async def _insert_profiles(
@@ -513,97 +557,20 @@ async def _insert_profiles(
         ON CONFLICT (profile_id) DO NOTHING
         """
 
-    count = 0
-    for profile_data in profiles_data:
-        await conn.execute(
-            query,
-            profile_data["profile_id"],
-            profile_data["float_wmo_id"],
-            profile_data["timestamp"],
-            profile_data["latitude"],
-            profile_data["longitude"],
-            profile_data["position_qc"],
-            profile_data["data_mode"]
-        )
-        count += 1
+    data_to_insert = [
+        (
+            p["profile_id"],
+            p["float_wmo_id"],
+            p["timestamp"],
+            p["latitude"],
+            p["longitude"],
+            p["position_qc"],
+            p["data_mode"]
+        ) for p in profiles_data
+    ]
 
-    return count
-
-
-async def _insert_observations(
-    conn,
-    observations_data: List[Dict[str, Any]],
-    strategy: str
-) -> int:
-    """Insert observations data with deduplication"""
-
-    if not observations_data:
-        return 0
-
-    logger = get_run_logger()
-    count = 0
-
-    if strategy == "upsert":
-        # For observations, we'll use a composite key approach
-        # First, we need to create the unique constraint if it doesn't exist
-        try:
-            await conn.execute("""
-                ALTER TABLE observations
-                ADD CONSTRAINT observations_unique_key
-                UNIQUE (profile_id, depth, parameter)
-            """)
-        except Exception:
-            # Constraint likely already exists
-            pass
-
-        query = """
-            INSERT INTO observations (profile_id, depth, parameter, value, qc_flag)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT ON CONSTRAINT observations_unique_key
-            DO UPDATE SET
-                value = EXCLUDED.value,
-                qc_flag = EXCLUDED.qc_flag,
-                created_at = NOW()
-        """
-
-    else:  # ignore - use a different approach since we don't have a unique constraint
-        # Check and insert only if not exists
-        query = """
-            INSERT INTO observations (profile_id, depth, parameter, value, qc_flag)
-            SELECT $1, $2, $3, $4, $5
-            WHERE NOT EXISTS (
-                SELECT 1 FROM observations
-                WHERE profile_id = $1 AND depth = $2 AND parameter = $3
-            )
-        """
-
-    # Process observations in batches to avoid long-running transactions
-    batch_size = 50
-    for i in range(0, len(observations_data), batch_size):
-        batch = observations_data[i:i + batch_size]
-
-        for obs_data in batch:
-            try:
-                # Validate the data before insertion
-                if obs_data["depth"] is None or obs_data["value"] is None:
-                    logger.warning(f"Skipping observation with null depth or value: {obs_data}")
-                    continue
-
-                await conn.execute(
-                    query,
-                    obs_data["profile_id"],
-                    obs_data["depth"],
-                    obs_data["parameter"],
-                    obs_data["value"],
-                    obs_data["qc_flag"]
-                )
-                count += 1
-            except Exception as e:
-                # Log but continue with other observations
-                logger.warning(f"Failed to insert observation {obs_data.get('parameter', 'unknown')} at depth {obs_data.get('depth', 'unknown')}: {e}")
-                continue
-
-    return count
+    await conn.executemany(query, data_to_insert)
+    return len(data_to_insert)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,18 @@
+# Required packages for Argo Metadata Vector DB System
+
+# Database
+asyncpg>=0.29.0
+
+# Vector embeddings and AI
+mistralai>=1.0.0
+
+# NetCDF file handling
+xarray>=2024.0.0
+netCDF4>=1.6.5
+
+# Data processing
+numpy>=1.26.0
+pandas>=2.2.0
+
+# Optional: for development
+python-dotenv>=1.0.0
