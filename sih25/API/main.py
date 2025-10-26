@@ -42,9 +42,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager for database connections"""
     logger.info("Starting MCP Tool Server...")
 
-    # Initialize database connection
+    # Initialize database connection and store in app state
     try:
         db_manager = await get_db_manager()
+        app.state.db_manager = db_manager
         logger.info("Database connection initialized")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
@@ -81,7 +82,7 @@ app.add_middleware(
 async def health_check():
     """Health check endpoint"""
     try:
-        db_manager = await get_db_manager()
+        db_manager = app.state.db_manager
         db_healthy = await db_manager.health_check()
 
         return {
@@ -202,6 +203,8 @@ async def list_profiles_tool(
     )
 
     # Add safety metadata
+    if not isinstance(response.metadata, dict) or response.metadata is None:
+        response.metadata = {}
     response.metadata.update(safety_metadata)
     return response
 
@@ -227,14 +230,16 @@ async def get_profile_details_tool(profile_id: str) -> ToolResponse:
 
     response = await argo_tools._execute_with_timing(
         argo_tools.get_profile_details,
+    response = await argo_tools._execute_with_timing(
+        argo_tools.get_profile_details,
         profile_id
-    )
+    ))
 
     # Add safety metadata
+    if not isinstance(response.metadata, dict) or response.metadata is None:
+        response.metadata = {}
     response.metadata.update(safety_metadata)
     return response
-
-
 @app.post("/tools/search_floats_near",
           summary="Find floats near a location",
           description="Search for ARGO floats within specified radius of coordinates")
@@ -288,22 +293,24 @@ async def get_profile_statistics_tool(
     )
 
     if not is_safe:
+        return ToolResponse()
+    if not is_safe:
         return ToolResponse(
             success=False,
             errors=[{"error": "validation_error", "message": "; ".join(safety_errors), "details": safety_metadata}],
             metadata=safety_metadata
         )
-
+        
     response = await argo_tools._execute_with_timing(
         argo_tools.get_profile_statistics,
         profile_id, variable
     )
 
     # Add safety metadata
+    if not isinstance(response.metadata, dict) or response.metadata is None:
+        response.metadata = {}
     response.metadata.update(safety_metadata)
     return response
-
-
 # Vector Search Tool Endpoints
 @app.post("/tools/semantic_search",
           summary="Semantic search for ARGO profiles",
@@ -383,15 +390,16 @@ async def hybrid_search_tool(
         vector_weight=vector_weight
     )
 
+from fastapi import UploadFile, File
 
-# Metadata Processing Endpoints
 @app.post("/metadata/upload",
           summary="Upload and process metadata files",
           description="Upload metadata files for vector database processing")
-async def upload_metadata_file(file_path: str, filename: str):
+async def upload_metadata_file(file: UploadFile = File(...)):
     """Process uploaded metadata file"""
     processor = get_metadata_processor()
-    result = await processor.process_uploaded_file(file_path, filename)
+    contents = await file.read()
+    result = await processor.process_uploaded_file_contents(contents, file.filename)
 
     if result["success"]:
         return {
@@ -405,8 +413,6 @@ async def upload_metadata_file(file_path: str, filename: str):
             status_code=400,
             detail=f"Processing failed: {result['error']}"
         )
-
-
 @app.post("/metadata/create_sample",
           summary="Create sample metadata for testing",
           description="Generate sample metadata entries for demonstration")
@@ -488,12 +494,14 @@ mcp.mount_http()
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("API_PORT", "8000"))
-    host = os.getenv("API_HOST", "0.0.0.0")
-
+    logger.info(f"Starting server on {host}:{port}")
+if __name__ == "__main__":
+    import uvicorn
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "8000"))
     logger.info(f"Starting server on {host}:{port}")
     uvicorn.run(
-        "sih25.API.main:app",
+        app,
         host=host,
         port=port,
         reload=True,
