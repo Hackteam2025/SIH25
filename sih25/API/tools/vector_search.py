@@ -6,6 +6,7 @@ Provides semantic search capabilities for the ARGO AI agent
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import json
 
 from pydantic import BaseModel, Field
 
@@ -97,7 +98,7 @@ class VectorSearchTools:
                     },
                     "timestamp": match["metadata"].get("timestamp", ""),
                     "region": match["metadata"].get("region", "unknown"),
-                    "parameters": match["metadata"].get("parameters", "[]"),
+                    "parameters": __import__('json').loads(match["metadata"].get("parameters", "[]")),
                     "summary": match["summary"][:200] + "..." if len(match["summary"]) > 200 else match["summary"],
                     "match_reason": f"Semantic similarity: {match['similarity']:.1%}"
                 }
@@ -256,7 +257,7 @@ class VectorSearchTools:
                     "summary": match["summary"][:150] + "..." if len(match["summary"]) > 150 else match["summary"],
                     "context_match": {
                         "description_relevance": match["similarity"],
-                        "region_match": region == metadata.get("region") if region else None,
+                        "region_match": region.lower() == metadata.get("region", "").lower() if region else None,
                         "season_match": season == metadata.get("season") if season else None
                     }
                 }
@@ -313,7 +314,8 @@ class VectorSearchTools:
         """
         try:
             await self._ensure_vector_store()
-
+        except Exception as e:
+            logger.error(f"Hybrid search failed: {e}")
             # Get semantic matches first
             semantic_matches = await self.vector_store.semantic_search(
                 query=query,
@@ -338,7 +340,7 @@ class VectorSearchTools:
 
                 # Apply parameter filter
                 if parameters:
-                    profile_params = eval(metadata.get("parameters", "[]"))
+                    profile_params = json.loads(metadata.get("parameters", "[]"))
                     if not all(param in profile_params for param in parameters):
                         continue
 
@@ -378,11 +380,9 @@ class VectorSearchTools:
                         "latitude": metadata.get("latitude", 0.0),
                         "longitude": metadata.get("longitude", 0.0)
                     },
-                    "timestamp": metadata.get("timestamp", ""),
-                    "parameters": eval(metadata.get("parameters", "[]")),
+                    "parameters": json.loads(metadata.get("parameters", "[]")),
                     "region": metadata.get("region", "unknown"),
-                    "summary": match["summary"][:120] + "..." if len(match["summary"]) > 120 else match["summary"]
-                }
+                    "summary": match["summary"][:120] + "..." if len(match["summary"]) > 120 else match["summary"]}
                 results.append(profile_data)
 
             return ToolResponse(
@@ -418,7 +418,7 @@ class VectorSearchTools:
         """Get vector store statistics and health"""
         try:
             await self._ensure_vector_store()
-            stats = self.vector_store.get_stats()
+            stats = await self.vector_store.get_stats()
 
             return ToolResponse(
                 success=True,
