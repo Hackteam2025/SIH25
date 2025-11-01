@@ -314,8 +314,6 @@ class VectorSearchTools:
         """
         try:
             await self._ensure_vector_store()
-        except Exception as e:
-            logger.error(f"Hybrid search failed: {e}")
             # Get semantic matches first
             semantic_matches = await self.vector_store.semantic_search(
                 query=query,

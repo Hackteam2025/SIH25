@@ -277,10 +277,10 @@ class VectorStore:
             logger.error(f"Similar profile search failed: {e}")
             return []
 
-    def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> Dict[str, Any]:
         """Get vector store statistics"""
         if not self.collection:
-            return {"status": "not_initialized"}
+            await self.initialize()
 
         try:
             count = self.collection.count()
